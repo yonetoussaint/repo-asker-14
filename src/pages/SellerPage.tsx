@@ -38,42 +38,11 @@ const SellerPage = () => {
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Header height measurement
   const headerRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [tabsHeight, setTabsHeight] = useState(0);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
-
-  // Measure header heights
-  useEffect(() => {
-    const measureHeights = () => {
-      if (headerRef.current) {
-        setHeaderHeight(headerRef.current.offsetHeight);
-      }
-      if (tabsRef.current) {
-        setTabsHeight(tabsRef.current.offsetHeight);
-      }
-    };
-
-    measureHeights();
-
-    const timeouts = [
-      setTimeout(measureHeights, 100),
-      setTimeout(measureHeights, 500),
-      setTimeout(measureHeights, 1000)
-    ];
-
-    const handleResize = () => measureHeights();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      timeouts.forEach(clearTimeout);
-    };
-  }, [seller]);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
@@ -125,12 +94,10 @@ const SellerPage = () => {
     );
   }
 
-  const totalStickyHeight = headerHeight + tabsHeight;
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Product Header - Fixed */}
-      <div ref={headerRef} className="sticky top-0 left-0 right-0 z-50 bg-background border-b">
+      {/* Product Header - Normal flow */}
+      <div ref={headerRef} className="bg-background border-b">
         <ProductHeader 
           sellerMode={true} 
           activeSection={activeTab} 
@@ -154,21 +121,17 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Sticky Tabs Navigation - Fixed below header */}
-      <div 
-        ref={tabsRef} 
-        className="fixed left-0 right-0 z-40 bg-background border-b"
-        style={{ top: `${headerHeight}px` }}
-      >
+      {/* Tabs Navigation - Normal flow */}
+      <div ref={tabsRef} className="bg-background border-b">
         <SellerStickyTabsNavigation
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          headerHeight={0} // Not needed since we're handling positioning ourselves
+          headerHeight={0}
         />
       </div>
 
-      {/* Main Content - Offset by total sticky height */}
-      <div style={{ paddingTop: `${totalStickyHeight + 20}px` }}>
+      {/* Main Content - no extra offset */}
+      <div>
         {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
@@ -327,7 +290,6 @@ const SellerPage = () => {
               <h3 className="text-lg font-medium text-foreground mb-2">About Content</h3>
               <p className="text-muted-foreground">About tab content will be displayed here.</p>
             </div>
-            {/* Added extra content to test scrolling */}
             <div className="h-screen bg-muted/20 flex items-center justify-center">
               <p className="text-lg">Scroll test area - About tab</p>
             </div>
@@ -345,7 +307,6 @@ const SellerPage = () => {
               <h3 className="text-lg font-medium text-foreground mb-2">Reviews Content</h3>
               <p className="text-muted-foreground">Reviews tab content will be displayed here.</p>
             </div>
-            {/* Added extra content to test scrolling */}
             <div className="h-screen bg-muted/20 flex items-center justify-center">
               <p className="text-lg">Scroll test area - Reviews tab</p>
             </div>
