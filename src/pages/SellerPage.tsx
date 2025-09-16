@@ -59,7 +59,7 @@ const SellerPage = () => {
     };
 
     measureHeights();
-    
+
     const timeouts = [
       setTimeout(measureHeights, 100),
       setTimeout(measureHeights, 500),
@@ -327,6 +327,13 @@ const SellerPage = () => {
               <h3 className="text-lg font-medium text-foreground mb-2">About Content</h3>
               <p className="text-muted-foreground">About tab content will be displayed here.</p>
             </div>
+            {/* Added extra content to test scrolling */}
+            <div className="h-screen bg-muted/20 flex items-center justify-center">
+              <p className="text-lg">Scroll test area - About tab</p>
+            </div>
+            <div className="h-screen bg-muted/40 flex items-center justify-center">
+              <p className="text-lg">More scroll test area - About tab</p>
+            </div>
           </div>
         )}
 
@@ -337,6 +344,16 @@ const SellerPage = () => {
               <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">Reviews Content</h3>
               <p className="text-muted-foreground">Reviews tab content will be displayed here.</p>
+            </div>
+            {/* Added extra content to test scrolling */}
+            <div className="h-screen bg-muted/20 flex items-center justify-center">
+              <p className="text-lg">Scroll test area - Reviews tab</p>
+            </div>
+            <div className="h-screen bg-muted/40 flex items-center justify-center">
+              <p className="text-lg">More scroll test area - Reviews tab</p>
+            </div>
+            <div className="h-screen bg-muted/60 flex items-center justify-center">
+              <p className="text-lg">Even more scroll test area - Reviews tab</p>
             </div>
           </div>
         )}
