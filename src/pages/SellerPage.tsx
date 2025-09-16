@@ -29,72 +29,83 @@ const SellerPage = () => {
   const navigate = useNavigate();
   const headerRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
-  
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isSticky, setIsSticky] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(64);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const [tabsHeight, setTabsHeight] = useState(0);
   const tabsInitialOffset = useRef<number | null>(null);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
-  // Set header height and update scroll-padding-top css property
+  // Measure header height, tabs initial offset, tabs height, scroll sticky toggle
   useEffect(() => {
     const updateHeaderHeight = () => {
       if (headerRef.current) {
-        const h = headerRef.current.offsetHeight;
-        setHeaderHeight(h);
-        document.documentElement.style.setProperty('--header-height', `${h}px`);
-        document.documentElement.style.scrollPaddingTop = `${h}px`;
+        return headerRef.current.offsetHeight;
       }
+      return 0;
     };
 
-    updateHeaderHeight();
-    window.addEventListener('resize', updateHeaderHeight);
-    return () => window.removeEventListener('resize', updateHeaderHeight);
-  }, []);
-
-  // Measure tabs initial offset and height, and handle sticky toggle
-  useEffect(() => {
-    const updateTabsOffset = () => {
+    const updateTabsOffset = (headerH: number) => {
       if (tabsRef.current) {
         const rect = tabsRef.current.getBoundingClientRect();
-        tabsInitialOffset.current = rect.top + window.scrollY - headerHeight;
+        return rect.top + window.scrollY - headerH;
+      }
+      return 0;
+    };
+
+    const updateTabsHeight = () => {
+      if (tabsRef.current) {
         setTabsHeight(tabsRef.current.offsetHeight);
       }
     };
 
-    updateTabsOffset();
+    const initialHeaderHeight = updateHeaderHeight();
+    setHeaderHeight(initialHeaderHeight);
+    tabsInitialOffset.current = updateTabsOffset(initialHeaderHeight);
+    updateTabsHeight();
+
+    const handleResize = () => {
+      const newHeaderHeight = updateHeaderHeight();
+      setHeaderHeight(newHeaderHeight);
+      tabsInitialOffset.current = updateTabsOffset(newHeaderHeight);
+      updateTabsHeight();
+    };
 
     const handleScroll = () => {
       if (tabsInitialOffset.current === null) return;
+
       setIsSticky(window.scrollY >= tabsInitialOffset.current);
     };
 
-    window.addEventListener('resize', updateTabsOffset);
+    window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll);
 
     return () => {
-      window.removeEventListener('resize', updateTabsOffset);
+      window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [headerHeight]);
+  }, []);
 
-  // Scroll tabs into view on tab change with offset handled by scroll-padding-top
+  // Scroll adjustment on tab change: scroll tabs navigation into view just below header
   useEffect(() => {
-    if (!tabsRef.current) return;
+    if (!tabsRef.current || !headerRef.current) return;
     const tabsTop = tabsRef.current.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: tabsTop, behavior: 'smooth' });
+    const headerH = headerRef.current.offsetHeight;
+    const scrollTo = tabsTop - headerH;
+    window.scrollTo({
+      top: scrollTo,
+      behavior: 'smooth',
+    });
   }, [activeTab]);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
-    if (!imagePath)
-      return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
+    if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
     const { data } = supabase.storage.from('seller-logos').getPublicUrl(imagePath);
     return data.publicUrl;
   };
@@ -107,30 +118,39 @@ const SellerPage = () => {
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long' 
+    });
   };
 
   const handleFollow = () => {
     setIsFollowing(!isFollowing);
-    toast.success(isFollowing ? 'Unfollowed' : 'Following');
+    toast.success(isFollowing ? "Unfollowed" : "Following");
   };
 
   const handleMessage = () => {
-    toast.info('Message feature coming soon');
+    toast.info("Message feature coming soon");
   };
 
-  const filteredProducts = products.filter(product =>
+  const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
-      case 'newest': return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case 'price-low': return a.price - b.price;
-      case 'price-high': return b.price - a.price;
-      case 'rating': return (b.rating || 0) - (a.rating || 0);
-      default: return (b.sales_count || 0) - (a.sales_count || 0);
+      case 'newest':
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'rating':
+        return (b.rating || 0) - (a.rating || 0);
+      case 'popularity':
+      default:
+        return (b.sales_count || 0) - (a.sales_count || 0);
     }
   });
 
@@ -151,7 +171,7 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-white overflow-visible">
       {/* Fixed Header */}
-      <div
+      <div 
         ref={headerRef}
         className="fixed top-0 left-0 right-0 z-50 bg-white border-b"
       >
@@ -162,75 +182,100 @@ const SellerPage = () => {
           onFollow={handleFollow}
           onMessage={handleMessage}
           actionButtons={[
-            { Icon: Heart, active: isFollowing, onClick: handleFollow, activeColor: '#f43f5e' },
-            { Icon: MessageCircle, onClick: handleMessage }
+            {
+              Icon: Heart,
+              active: isFollowing,
+              onClick: handleFollow,
+              activeColor: "#f43f5e"
+            },
+            {
+              Icon: MessageCircle,
+              onClick: handleMessage
+            }
           ]}
           forceScrolledState={true}
         />
       </div>
 
-      {/* Main Content */}
+      {/* Main Content padding-top fixed */}
       <div className="bg-white pt-4">
-        {/* Seller Profile - only on products tab */}
+        {/* Seller Info only on products tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6 border-b">
-            <div className="flex items-center space-x-6">
-              <img
-                src={getSellerLogoUrl(seller.logo_path)}
-                alt={`${seller.store_name} logo`}
-                className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
-              />
-              <div className="flex-1 min-w-0">
-                <h1 className="text-3xl font-bold truncate">{seller.store_name}</h1>
-                <p className="text-muted-foreground text-sm mt-1 truncate">{seller.description}</p>
-                <div className="flex space-x-8 mt-4 text-sm text-muted-foreground">
-                  {typeof seller.follower_count === 'number' && (
-                    <div className="flex flex-col items-center">
-                      <span className="font-semibold text-lg">{formatNumber(seller.follower_count)}</span>
-                      <span>Followers</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <h2 className="text-2xl font-bold mb-2">{seller.store_name}</h2>
+                <p className="text-muted-foreground mb-4">{seller.description}</p>
+
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  {seller.location && (
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {seller.location}
                     </div>
                   )}
-                  {products.length > 0 && (
-                    <div className="flex flex-col items-center">
-                      <span className="font-semibold text-lg">{products.length}</span>
-                      <span>Products</span>
-                    </div>
-                  )}
-                  <div className="flex flex-col items-center">
-                    <span className="font-semibold text-lg">{seller.response_rate || 95}%</span>
-                    <span>Response Rate</span>
+
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Member since {formatDate(seller.created_at)}
                   </div>
+
+                  <div className="flex items-center">
+                    <Users className="w-4 h-4 mr-1" />
+                    {formatNumber(seller.follower_count || 0)} followers
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <span className="text-sm">Response Rate</span>
+                  <span className="font-semibold">{seller.response_rate || 95}%</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <span className="text-sm">Response Time</span>
+                  <span className="font-semibold">{seller.response_time || 'Within hours'}</span>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tabs Navigation */}
+        {/* Tabs Navigation - sticky using sticky position */}
         <div
           ref={tabsRef}
-          className={`bg-white border-b z-50 transition-all sticky shadow-md`}
-          style={{ top: headerHeight }}
+          className={`bg-white border-b z-50 transition-all ${isSticky ? 'sticky shadow-md' : ''}`}
+          style={isSticky ? { top: headerHeight } : undefined}
         >
           <div className="container mx-auto">
-            <TabsNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+            <TabsNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
           </div>
         </div>
 
-        {/* Placeholder for sticky tabs height */}
-        <div style={{ height: isSticky ? tabsHeight : 0 }} />
+        {/* Placeholder to prevent content jump */}
+        {isSticky && <div style={{ height: tabsHeight }} />}
 
-        {/* Tab Content */}
+        {/* Tab content with padding to avoid overlap */}
         {activeTab === 'products' && (
-          <div className="container mx-auto px-4 py-6" style={{ paddingTop: headerHeight + tabsHeight }}>
-            {/* Product tab content unchanged */}
-            {/* Search and Filter Controls */}
-            {/* ... (rest of your existing products tab content) */}
+          <div
+            className="container mx-auto px-4 py-6"
+            style={{ paddingTop: headerHeight + tabsHeight }}
+          >
+            {/* Products tab content (rest unchanged) */}
+            {/* ... */}
           </div>
         )}
 
         {activeTab === 'about' && (
-          <div className="container mx-auto px-4 py-6" style={{ paddingTop: headerHeight + tabsHeight }}>
+          <div
+            className="container mx-auto px-4 py-6"
+            style={{ paddingTop: headerHeight + tabsHeight }}
+          >
             <div className="text-center py-12">
               <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">About Content</h3>
@@ -240,7 +285,10 @@ const SellerPage = () => {
         )}
 
         {activeTab === 'reviews' && (
-          <div className="container mx-auto px-4 py-6" style={{ paddingTop: headerHeight + tabsHeight }}>
+          <div
+            className="container mx-auto px-4 py-6"
+            style={{ paddingTop: headerHeight + tabsHeight }}
+          >
             <div className="text-center py-12">
               <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">Reviews Content</h3>
@@ -248,6 +296,7 @@ const SellerPage = () => {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
