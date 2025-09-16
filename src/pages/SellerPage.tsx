@@ -36,6 +36,7 @@ const SellerPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isSticky, setIsSticky] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [tabsHeight, setTabsHeight] = useState(0);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
@@ -46,23 +47,36 @@ const SellerPage = () => {
         setHeaderHeight(headerRef.current.offsetHeight);
       }
     };
+    const updateTabsHeight = () => {
+      if (tabsRef.current) {
+        setTabsHeight(tabsRef.current.offsetHeight);
+      }
+    };
 
     updateHeaderHeight();
-    window.addEventListener('resize', updateHeaderHeight);
+    updateTabsHeight();
+
+    const handleResize = () => {
+      updateHeaderHeight();
+      updateTabsHeight();
+    };
+
+    window.addEventListener('resize', handleResize);
 
     const handleScroll = () => {
       if (!tabsRef.current) return;
 
       const tabsTop = tabsRef.current.getBoundingClientRect().top;
-      setIsSticky(tabsTop <= 0);
+      setIsSticky(tabsTop <= headerHeight);
     };
 
     window.addEventListener('scroll', handleScroll);
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', updateHeaderHeight);
+      window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [headerHeight]);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
@@ -138,7 +152,6 @@ const SellerPage = () => {
         <SellerHeader
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          
           isFollowing={isFollowing}
           onFollow={handleFollow}
           onMessage={handleMessage}
@@ -158,8 +171,8 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Main Content - accounting for header height */}
-      <div className="bg-white pt-16">
+      {/* Main Content - padding top accounts for fixed header height */}
+      <div className="bg-white" style={{ paddingTop: headerHeight }}>
         {/* Seller Info Section (above tabs) */}
         <div className="container mx-auto px-4 py-6 border-b">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -201,10 +214,11 @@ const SellerPage = () => {
           </div>
         </div>
 
-        {/* Tabs Navigation - becomes sticky on scroll */}
-        <div 
+        {/* Tabs Navigation - sticky below header */}
+        <div
           ref={tabsRef}
-          className={`bg-white border-b z-40 transition-all ${isSticky ? 'fixed top-16 left-0 right-0 shadow-md' : ''}`}
+          className={`bg-white border-b z-40 transition-all ${isSticky ? 'fixed left-0 right-0 shadow-md' : ''}`}
+          style={isSticky ? { top: headerHeight } : undefined}
         >
           <div className="container mx-auto">
             <TabsNavigation
@@ -215,11 +229,10 @@ const SellerPage = () => {
           </div>
         </div>
 
-        {/* Add padding when tabs are sticky to prevent content jump */}
-        {isSticky && <div className="h-12"></div>}
+        {/* Placeholder div to prevent content jump when sticky */}
+        {isSticky && <div style={{ height: tabsHeight }} />}
 
         {/* Tab Content */}
-        {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
             {/* Search and Filter Controls */}
