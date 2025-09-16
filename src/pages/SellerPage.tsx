@@ -40,7 +40,10 @@ const SellerPage = () => {
 
   // Header height measurement
   const headerRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [tabsHeight, setTabsHeight] = useState(0);
+  const [totalHeaderHeight, setTotalHeaderHeight] = useState(0);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
@@ -51,11 +54,25 @@ const SellerPage = () => {
       if (headerRef.current) {
         setHeaderHeight(headerRef.current.offsetHeight);
       }
+      if (tabsRef.current) {
+        setTabsHeight(tabsRef.current.offsetHeight);
+      }
+      // Calculate total height when both are available
+      if (headerRef.current && tabsRef.current) {
+        setTotalHeaderHeight(headerRef.current.offsetHeight + tabsRef.current.offsetHeight);
+      }
     };
 
     updateHeaderHeight();
     window.addEventListener('resize', updateHeaderHeight);
-    return () => window.removeEventListener('resize', updateHeaderHeight);
+    
+    // Use a slight delay to ensure components are rendered
+    const timer = setTimeout(updateHeaderHeight, 100);
+    
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+      clearTimeout(timer);
+    };
   }, []);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
@@ -136,14 +153,16 @@ const SellerPage = () => {
       </div>
 
       {/* Sticky Tabs Navigation - positioned just below header */}
-      <SellerStickyTabsNavigation
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        headerHeight={headerHeight}
-      />
+      <div ref={tabsRef}>
+        <SellerStickyTabsNavigation
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          headerHeight={headerHeight}
+        />
+      </div>
 
-      {/* Main Content Area */}
-      <div className="relative">
+      {/* Main Content Area - with proper spacing for sticky headers */}
+      <div className="relative" style={{ paddingTop: `${totalHeaderHeight}px` }}>
         {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
