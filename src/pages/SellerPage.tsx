@@ -37,16 +37,41 @@ const SellerPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  
-  // Header height for sticky navigation
-  const [headerHeight, setHeaderHeight] = useState(60);
+
+  // Header height measurement
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
-  // Set header height on mount
+  // Measure header height on mount and resize
   useEffect(() => {
-    setHeaderHeight(60); // Fixed header height for seller pages
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+
+    updateHeaderHeight();
+    
+    // Add resize listener to handle window resizing
+    window.addEventListener('resize', updateHeaderHeight);
+    
+    // Add mutation observer to handle dynamic content changes
+    const observer = new MutationObserver(updateHeaderHeight);
+    if (headerRef.current) {
+      observer.observe(headerRef.current, { 
+        childList: true, 
+        subtree: true, 
+        characterData: true 
+      });
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+      observer.disconnect();
+    };
   }, []);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
@@ -79,266 +104,269 @@ const SellerPage = () => {
   }
 
   return (
-  <div className="min-h-screen bg-background">
-    {/* Product-style Header */}
-    <ProductHeader
-      sellerMode={true} // Force scrolled state for seller pages
-      activeSection={activeTab}
-      onTabChange={setActiveTab}
-      actionButtons={[
-        {
-          Icon: Heart,
-          active: isFollowing,
-          onClick: handleFollow,
-          activeColor: "#f43f5e"
-        },
-        {
-          Icon: MessageCircle,
-          onClick: handleMessage
-        }
-      ]}
-    />
-
-    {/* Sticky Tabs Navigation - MOVED RIGHT AFTER HEADER */}
-    <SellerStickyTabsNavigation
-      headerHeight={headerHeight}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      className="sticky top-0 z-40 bg-background border-b" // Added sticky classes
-    />
-
-    {/* Overview/Gallery Section */}
-    <div className="p-4 space-y-4">
-      {/* Seller Info Compact */}
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-3">
-          <img
-            src={getSellerLogoUrl(seller.image_url)}
-            alt={seller.name}
-            className="w-full aspect-square rounded-lg object-cover"
-          />
-        </div>
-
-        <div className="col-span-6 space-y-1">
-          <h2 className="font-semibold text-lg">{seller.name}</h2>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Star className="w-3 h-3 fill-current text-yellow-500" />
-            <span>{(seller.rating || 4.8).toFixed(1)}</span>
-            <Users className="w-3 h-3 ml-2" />
-            <span>{formatNumber(seller.followers_count)}</span>
-          </div>
-          <div className="flex gap-1">
-            {seller.verified && <CheckCircle className="w-4 h-4 text-primary" />}
-            <Shield className="w-4 h-4 text-green-500" />
-            <Truck className="w-4 h-4 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="col-span-3 space-y-2">
-          <Button onClick={handleFollow} size="sm" className="w-full" variant={isFollowing ? "outline" : "default"}>
-            {isFollowing ? 'Following' : 'Follow'}
-          </Button>
-          <Button onClick={handleMessage} size="sm" variant="outline" className="w-full">
-            <MessageCircle className="w-3 h-3 mr-1" />
-            Chat
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background">
+      {/* Product-style Header with ref for measurement */}
+      <div ref={headerRef}>
+        <ProductHeader
+          sellerMode={true}
+          activeSection={activeTab}
+          onTabChange={setActiveTab}
+          actionButtons={[
+            {
+              Icon: Heart,
+              active: isFollowing,
+              onClick: handleFollow,
+              activeColor: "#f43f5e"
+            },
+            {
+              Icon: MessageCircle,
+              onClick: handleMessage
+            }
+          ]}
+        />
       </div>
 
-      {/* Compact Stats Grid */}
-      <div className="grid grid-cols-4 gap-2">
-        <div className="text-center p-3 rounded-lg bg-muted/30">
-          <div className="text-lg font-semibold">{formatNumber(seller.total_sales)}</div>
-          <div className="text-xs text-muted-foreground">Sales</div>
-        </div>
-        <div className="text-center p-3 rounded-lg bg-muted/30">
-          <div className="text-lg font-semibold">{products.length}</div>
-          <div className="text-xs text-muted-foreground">Products</div>
-        </div>
-        <div className="text-center p-3 rounded-lg bg-muted/30">
-          <div className="text-lg font-semibold">{seller.trust_score}%</div>
-          <div className="text-xs text-muted-foreground">Rating</div>
-        </div>
-        <div className="text-center p-3 rounded-lg bg-muted/30">
-          <div className="text-lg font-semibold">24h</div>
-          <div className="text-xs text-muted-foreground">Response</div>
-        </div>
-      </div>
-    </div>
+      {/* Sticky Tabs Navigation - positioned with dynamic header height */}
+      <SellerStickyTabsNavigation
+        headerHeight={headerHeight}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        style={{ top: headerHeight }}
+        className="sticky z-40 bg-background border-b"
+      />
 
-    {/* Tab Content */}
-    <div className="p-4">
-      {/* Add padding top when sticky tabs are visible */}
-      <div className="pt-16" />
-
-      {activeTab === 'overview' && (
-        <div id="overview" className="space-y-4">
-          <div className="text-center py-8">
-            <h3 className="text-lg font-semibold mb-2">Store Overview</h3>
-            <p className="text-muted-foreground">Store information and statistics will be shown here.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Products Tab Content */}
-      {activeTab === 'products' && (
-        <div id="products" className="space-y-4">
-          {/* Clean Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+      {/* Overview/Gallery Section */}
+      <div className="p-4 space-y-4">
+        {/* Seller Info Compact */}
+        <div className="grid grid-cols-12 gap-4">
+          <div className="col-span-3">
+            <img
+              src={getSellerLogoUrl(seller.image_url)}
+              alt={seller.name}
+              className="w-full aspect-square rounded-lg object-cover"
             />
           </div>
 
-          {/* View Controls */}
-          <div className="flex items-center justify-between">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="popularity">Popular</SelectItem>
-                <SelectItem value="price-low">Low Price</SelectItem>
-                <SelectItem value="price-high">High Price</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex gap-2">
-              <Button 
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
+          <div className="col-span-6 space-y-1">
+            <h2 className="font-semibold text-lg">{seller.name}</h2>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Star className="w-3 h-3 fill-current text-yellow-500" />
+              <span>{(seller.rating || 4.8).toFixed(1)}</span>
+              <Users className="w-3 h-3 ml-2" />
+              <span>{formatNumber(seller.followers_count)}</span>
+            </div>
+            <div className="flex gap-1">
+              {seller.verified && <CheckCircle className="w-4 h-4 text-primary" />}
+              <Shield className="w-4 h-4 text-green-500" />
+              <Truck className="w-4 h-4 text-blue-500" />
             </div>
           </div>
 
-          {/* Products Grid */}
-          <div className={`grid gap-3 ${viewMode === 'grid' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            {products.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">No products found</h3>
-                <p className="text-muted-foreground">This seller hasn't added any products yet.</p>
-              </div>
-            ) : (
-              products.map((product) => (
-                <Card key={product.id} className="overflow-hidden">
-                  <img 
-                    src={product.product_images?.[0]?.src || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop"} 
-                    alt={product.name}
-                    className="w-full aspect-square object-cover"
-                  />
-                  <div className="p-3 space-y-1">
-                    <h4 className="font-medium text-sm line-clamp-2">{product.name}</h4>
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-primary">${product.price}</span>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-current text-yellow-500" />
-                        <span className="text-xs">4.8</span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            )}
+          <div className="col-span-3 space-y-2">
+            <Button onClick={handleFollow} size="sm" className="w-full" variant={isFollowing ? "outline" : "default"}>
+              {isFollowing ? 'Following' : 'Follow'}
+            </Button>
+            <Button onClick={handleMessage} size="sm" variant="outline" className="w-full">
+              <MessageCircle className="w-3 h-3 mr-1" />
+              Chat
+            </Button>
           </div>
         </div>
-      )}
 
-      {/* About Tab Content */}
-      {activeTab === 'about' && (
-        <div id="about" className="space-y-6">
-          <div>
-            <h3 className="font-semibold mb-3">About {seller.name}</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              {seller.description || `${seller.name} is a trusted seller providing quality products with excellent customer service. Join thousands of satisfied customers who trust our products and service.`}
-            </p>
+        {/* Compact Stats Grid */}
+        <div className="grid grid-cols-4 gap-2">
+          <div className="text-center p-3 rounded-lg bg-muted/30">
+            <div className="text-lg font-semibold">{formatNumber(seller.total_sales)}</div>
+            <div className="text-xs text-muted-foreground">Sales</div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm font-medium">Verified Seller</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-500" />
-                <span className="text-sm font-medium">Secure Transactions</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Truck className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-medium">Fast Shipping</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-yellow-500" />
-                <span className="text-sm font-medium">{(seller.rating || 4.8).toFixed(1)} Rating</span>
-              </div>
-            </div>
+          <div className="text-center p-3 rounded-lg bg-muted/30">
+            <div className="text-lg font-semibold">{products.length}</div>
+            <div className="text-xs text-muted-foreground">Products</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-muted/30">
+            <div className="text-lg font-semibold">{seller.trust_score}%</div>
+            <div className="text-xs text-muted-foreground">Rating</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-muted/30">
+            <div className="text-lg font-semibold">24h</div>
+            <div className="text-xs text-muted-foreground">Response</div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Contact Tab Content */}
-      {activeTab === 'contact' && (
-        <div id="contact" className="space-y-6">
-          <div>
-            <h3 className="font-semibold mb-4">Contact Information</h3>
-            <div className="space-y-4">
-              {seller.email && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                  <Mail className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">Email</div>
-                    <div className="text-sm text-muted-foreground">{seller.email}</div>
-                  </div>
-                </div>
-              )}
-              {seller.phone && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                  <Phone className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">Phone</div>
-                    <div className="text-sm text-muted-foreground">{seller.phone}</div>
-                  </div>
-                </div>
-              )}
-              {seller.address && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                  <MapPin className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">Address</div>
-                    <div className="text-sm text-muted-foreground">{seller.address}</div>
-                  </div>
-                </div>
-              )}
-              <div className="flex gap-2 pt-2">
-                <Button onClick={handleMessage} className="flex-1">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Send Message
+      {/* Tab Content */}
+      <div className="p-4">
+        {/* Add padding top equal to tabs height when sticky tabs are visible */}
+        <div className="pt-16" />
+
+        {activeTab === 'overview' && (
+          <div id="overview" className="space-y-4">
+            <div className="text-center py-8">
+              <h3 className="text-lg font-semibold mb-2">Store Overview</h3>
+              <p className="text-muted-foreground">Store information and statistics will be shown here.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Products Tab Content */}
+        {activeTab === 'products' && (
+          <div id="products" className="space-y-4">
+            {/* Clean Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* View Controls */}
+            <div className="flex items-center justify-between">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="popularity">Popular</SelectItem>
+                  <SelectItem value="price-low">Low Price</SelectItem>
+                  <SelectItem value="price-high">High Price</SelectItem>
+                  <SelectItem value="newest">Newest</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex gap-2">
+                <Button 
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="w-4 h-4" />
                 </Button>
               </div>
             </div>
+
+            {/* Products Grid */}
+            <div className={`grid gap-3 ${viewMode === 'grid' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {products.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold mb-2">No products found</h3>
+                  <p className="text-muted-foreground">This seller hasn't added any products yet.</p>
+                </div>
+              ) : (
+                products.map((product) => (
+                  <Card key={product.id} className="overflow-hidden">
+                    <img 
+                      src={product.product_images?.[0]?.src || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop"} 
+                      alt={product.name}
+                      className="w-full aspect-square object-cover"
+                    />
+                    <div className="p-3 space-y-1">
+                      <h4 className="font-medium text-sm line-clamp-2">{product.name}</h4>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-primary">${product.price}</span>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-current text-yellow-500" />
+                          <span className="text-xs">4.8</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* About Tab Content */}
+        {activeTab === 'about' && (
+          <div id="about" className="space-y-6">
+            <div>
+              <h3 className="font-semibold mb-3">About {seller.name}</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {seller.description || `${seller.name} is a trusted seller providing quality products with excellent customer service. Join thousands of satisfied customers who trust our products and service.`}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span className="text-sm font-medium">Verified Seller</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-blue-500" />
+                  <span className="text-sm font-medium">Secure Transactions</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm font-medium">Fast Shipping</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  <span className="text-sm font-medium">{(seller.rating || 4.8).toFixed(1)} Rating</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Contact Tab Content */}
+        {activeTab === 'contact' && (
+          <div id="contact" className="space-y-6">
+            <div>
+              <h3 className="font-semibold mb-4">Contact Information</h3>
+              <div className="space-y-4">
+                {seller.email && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                    <Mail className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <div className="font-medium">Email</div>
+                      <div className="text-sm text-muted-foreground">{seller.email}</div>
+                    </div>
+                  </div>
+                )}
+                {seller.phone && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                    <Phone className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <div className="font-medium">Phone</div>
+                      <div className="text-sm text-muted-foreground">{seller.phone}</div>
+                    </div>
+                  </div>
+                )}
+                {seller.address && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                    <MapPin className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <div className="font-medium">Address</div>
+                      <div className="text-sm text-muted-foreground">{seller.address}</div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={handleMessage} className="flex-1">
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Send Message
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default SellerPage;
