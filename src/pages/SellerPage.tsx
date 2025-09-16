@@ -147,7 +147,7 @@ const SellerPage = () => {
     {/* Product Header - Normal flow */}
     <div className="bg-white border-b">
       <ProductHeader 
-        sellerMode={true} 
+        sellerMode={false} 
         activeSection={activeTab} 
         onTabChange={setActiveTab}
         seller={seller}
