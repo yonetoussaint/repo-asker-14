@@ -130,7 +130,7 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Product Header - Fixed */}
-      <div ref={headerRef} className="top-0 left-0 right-0 z-50 bg-background border-b">
+      <div ref={headerRef} className="sticky top-0 left-0 right-0 z-50 bg-background border-b">
         <ProductHeader 
           sellerMode={true} 
           activeSection={activeTab} 
