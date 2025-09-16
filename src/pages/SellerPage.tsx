@@ -54,24 +54,8 @@ const SellerPage = () => {
     };
 
     updateHeaderHeight();
-    
-    // Add resize listener to handle window resizing
     window.addEventListener('resize', updateHeaderHeight);
-    
-    // Add mutation observer to handle dynamic content changes
-    const observer = new MutationObserver(updateHeaderHeight);
-    if (headerRef.current) {
-      observer.observe(headerRef.current, { 
-        childList: true, 
-        subtree: true, 
-        characterData: true 
-      });
-    }
-
-    return () => {
-      window.removeEventListener('resize', updateHeaderHeight);
-      observer.disconnect();
-    };
+    return () => window.removeEventListener('resize', updateHeaderHeight);
   }, []);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
@@ -106,10 +90,10 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Product-style Header with ref for measurement */}
-      <div ref={headerRef}>
-        <ProductHeader
-          sellerMode={true}
-          activeSection={activeTab}
+      <div ref={headerRef} className="relative z-10">
+        <ProductHeader 
+          sellerMode={true} 
+          activeSection={activeTab} 
           onTabChange={setActiveTab}
           actionButtons={[
             {
@@ -122,245 +106,212 @@ const SellerPage = () => {
               Icon: MessageCircle,
               onClick: handleMessage
             }
-          ]}
+          ]} 
         />
       </div>
 
-      {/* Sticky Tabs Navigation - positioned with dynamic header height */}
-      <SellerStickyTabsNavigation
-        headerHeight={headerHeight}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        style={{ top: headerHeight }}
-        className="sticky z-40 bg-background border-b"
-      />
-
-      {/* Overview/Gallery Section */}
-      <div className="p-4 space-y-4">
-        {/* Seller Info Compact */}
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-3">
-            <img
-              src={getSellerLogoUrl(seller.image_url)}
-              alt={seller.name}
-              className="w-full aspect-square rounded-lg object-cover"
-            />
-          </div>
-
-          <div className="col-span-6 space-y-1">
-            <h2 className="font-semibold text-lg">{seller.name}</h2>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Star className="w-3 h-3 fill-current text-yellow-500" />
-              <span>{(seller.rating || 4.8).toFixed(1)}</span>
-              <Users className="w-3 h-3 ml-2" />
-              <span>{formatNumber(seller.followers_count)}</span>
-            </div>
-            <div className="flex gap-1">
-              {seller.verified && <CheckCircle className="w-4 h-4 text-primary" />}
-              <Shield className="w-4 h-4 text-green-500" />
-              <Truck className="w-4 h-4 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="col-span-3 space-y-2">
-            <Button onClick={handleFollow} size="sm" className="w-full" variant={isFollowing ? "outline" : "default"}>
-              {isFollowing ? 'Following' : 'Follow'}
-            </Button>
-            <Button onClick={handleMessage} size="sm" variant="outline" className="w-full">
-              <MessageCircle className="w-3 h-3 mr-1" />
-              Chat
-            </Button>
-          </div>
-        </div>
-
-        {/* Compact Stats Grid */}
-        <div className="grid grid-cols-4 gap-2">
-          <div className="text-center p-3 rounded-lg bg-muted/30">
-            <div className="text-lg font-semibold">{formatNumber(seller.total_sales)}</div>
-            <div className="text-xs text-muted-foreground">Sales</div>
-          </div>
-          <div className="text-center p-3 rounded-lg bg-muted/30">
-            <div className="text-lg font-semibold">{products.length}</div>
-            <div className="text-xs text-muted-foreground">Products</div>
-          </div>
-          <div className="text-center p-3 rounded-lg bg-muted/30">
-            <div className="text-lg font-semibold">{seller.trust_score}%</div>
-            <div className="text-xs text-muted-foreground">Rating</div>
-          </div>
-          <div className="text-center p-3 rounded-lg bg-muted/30">
-            <div className="text-lg font-semibold">24h</div>
-            <div className="text-xs text-muted-foreground">Response</div>
-          </div>
-        </div>
+      {/* Sticky Tabs Navigation - positioned below header */}
+      <div className="relative z-20">
+        <SellerStickyTabsNavigation
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          headerHeight={headerHeight}
+        />
       </div>
 
-      {/* Tab Content */}
-      <div className="p-4">
-        {/* Add padding top equal to tabs height when sticky tabs are visible */}
-        <div className="pt-16" />
-
-        {activeTab === 'overview' && (
-          <div id="overview" className="space-y-4">
-            <div className="text-center py-8">
-              <h3 className="text-lg font-semibold mb-2">Store Overview</h3>
-              <p className="text-muted-foreground">Store information and statistics will be shown here.</p>
-            </div>
-          </div>
-        )}
-
-        {/* Products Tab Content */}
+      {/* Main Content Area */}
+      <div className="relative">
+        {/* Content based on active tab */}
         {activeTab === 'products' && (
-          <div id="products" className="space-y-4">
-            {/* Clean Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* View Controls */}
-            <div className="flex items-center justify-between">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="popularity">Popular</SelectItem>
-                  <SelectItem value="price-low">Low Price</SelectItem>
-                  <SelectItem value="price-high">High Price</SelectItem>
-                  <SelectItem value="newest">Newest</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2">
-                <Button 
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Products Grid */}
-            <div className={`grid gap-3 ${viewMode === 'grid' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              {products.length === 0 ? (
-                <div className="col-span-full text-center py-12">
-                  <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">No products found</h3>
-                  <p className="text-muted-foreground">This seller hasn't added any products yet.</p>
-                </div>
-              ) : (
-                products.map((product) => (
-                  <Card key={product.id} className="overflow-hidden">
-                    <img 
-                      src={product.product_images?.[0]?.src || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop"} 
-                      alt={product.name}
-                      className="w-full aspect-square object-cover"
-                    />
-                    <div className="p-3 space-y-1">
-                      <h4 className="font-medium text-sm line-clamp-2">{product.name}</h4>
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-primary">${product.price}</span>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-current text-yellow-500" />
-                          <span className="text-xs">4.8</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* About Tab Content */}
-        {activeTab === 'about' && (
-          <div id="about" className="space-y-6">
-            <div>
-              <h3 className="font-semibold mb-3">About {seller.name}</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {seller.description || `${seller.name} is a trusted seller providing quality products with excellent customer service. Join thousands of satisfied customers who trust our products and service.`}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm font-medium">Verified Seller</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm font-medium">Secure Transactions</span>
+          <div className="container mx-auto px-4 py-6">
+            {/* Search and Filter Controls */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex-1 max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-orange-500" />
-                  <span className="text-sm font-medium">Fast Shipping</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium">{(seller.rating || 4.8).toFixed(1)} Rating</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Contact Tab Content */}
-        {activeTab === 'contact' && (
-          <div id="contact" className="space-y-6">
-            <div>
-              <h3 className="font-semibold mb-4">Contact Information</h3>
-              <div className="space-y-4">
-                {seller.email && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                    <Mail className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">Email</div>
-                      <div className="text-sm text-muted-foreground">{seller.email}</div>
-                    </div>
-                  </div>
-                )}
-                {seller.phone && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                    <Phone className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">Phone</div>
-                      <div className="text-sm text-muted-foreground">{seller.phone}</div>
-                    </div>
-                  </div>
-                )}
-                {seller.address && (
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                    <MapPin className="w-5 h-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">Address</div>
-                      <div className="text-sm text-muted-foreground">{seller.address}</div>
-                    </div>
-                  </div>
-                )}
-                <div className="flex gap-2 pt-2">
-                  <Button onClick={handleMessage} className="flex-1">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Send Message
+              
+              <div className="flex gap-2 items-center">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="popularity">Most Popular</SelectItem>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="rating">Highest Rated</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex border rounded-md">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="rounded-r-none"
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="rounded-l-none"
+                  >
+                    <List className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
+            </div>
+
+            {/* Products Grid/List */}
+            {productsLoading ? (
+              <div className="text-center py-12">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-12">
+                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">No products found</h3>
+                <p className="text-muted-foreground">This seller hasn't listed any products yet.</p>
+              </div>
+            ) : (
+              <div className={viewMode === 'grid' 
+                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" 
+                : "space-y-4"
+              }>
+                {products.map((product) => (
+                  <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                    {/* Product card content here */}
+                    <div className="p-4">
+                      <h3 className="font-medium truncate">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">${product.price}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'about' && (
+          <div className="container mx-auto px-4 py-6">
+            <div className="max-w-4xl">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Seller Info */}
+                <div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <img
+                      src={getSellerLogoUrl(seller.logo)}
+                      alt={seller.business_name}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                    <div>
+                      <h1 className="text-2xl font-bold">{seller.business_name}</h1>
+                      <div className="flex items-center gap-2 mt-1">
+                        <VerificationBadge isVerified={seller.is_verified} />
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">4.8</span>
+                          <span className="text-muted-foreground">({formatNumber(1250)} reviews)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">About</h3>
+                      <p className="text-muted-foreground">{seller.description}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">{formatNumber(12500)} followers</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">{products.length} products</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact & Policies */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-semibold mb-3">Contact Information</h3>
+                    <div className="space-y-2">
+                      {seller.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          <span>{seller.email}</span>
+                        </div>
+                      )}
+                      {seller.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          <span>{seller.phone}</span>
+                        </div>
+                      )}
+                      {seller.address && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span>{seller.address}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold mb-3">Policies</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-2">
+                        <Shield className="w-4 h-4 text-green-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">Buyer Protection</p>
+                          <p className="text-xs text-muted-foreground">30-day return policy</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Truck className="w-4 h-4 text-blue-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">Fast Shipping</p>
+                          <p className="text-xs text-muted-foreground">2-3 business days</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">Quality Guarantee</p>
+                          <p className="text-xs text-muted-foreground">100% authentic products</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reviews' && (
+          <div className="container mx-auto px-4 py-6">
+            <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
+            <div className="text-center py-12">
+              <Star className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Reviews coming soon</h3>
+              <p className="text-muted-foreground">Customer reviews will be displayed here.</p>
             </div>
           </div>
         )}
