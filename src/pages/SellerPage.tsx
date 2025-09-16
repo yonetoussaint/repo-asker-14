@@ -23,11 +23,43 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import VerificationBadge from '@/components/shared/VerificationBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ProductHeader from '@/components/product/ProductHeader';
-import SellerStickyTabsNavigation from '@/components/seller/SellerStickyTabsNavigation';
+
+// Create a simple sticky tabs component directly in this file
+const StickyTabsNavigation = ({ activeTab, onTabChange, headerHeight = 0 }) => {
+  const tabs = [
+    { id: 'products', label: 'Products' },
+    { id: 'about', label: 'About' },
+    { id: 'reviews', label: 'Reviews' },
+  ];
+
+  return (
+    <div 
+      className="sticky top-0 z-40 bg-white border-b border-gray-200"
+      style={{ top: headerHeight }}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex space-x-8">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`py-4 px-1 font-medium text-sm border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-[#ff4747] text-[#ff4747]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SellerPage = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
@@ -40,7 +72,6 @@ const SellerPage = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
   const headerRef = useRef<HTMLDivElement>(null);
-  const tabsRef = useRef<HTMLDivElement>(null);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
@@ -112,9 +143,9 @@ const SellerPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Product Header - Normal flow */}
-      <div ref={headerRef} className="bg-background border-b">
+      <div ref={headerRef} className="bg-white border-b">
         <ProductHeader 
           sellerMode={true} 
           activeSection={activeTab} 
@@ -139,16 +170,14 @@ const SellerPage = () => {
       </div>
 
       {/* Tabs Navigation - Sticky with proper header height */}
-      <div ref={tabsRef}>
-        <SellerStickyTabsNavigation
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          headerHeight={headerHeight}
-        />
-      </div>
+      <StickyTabsNavigation
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        headerHeight={headerHeight}
+      />
 
       {/* Main Content */}
-      <div className="pt-4">
+      <div className="pt-4 bg-white">
         {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
