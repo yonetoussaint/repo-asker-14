@@ -146,27 +146,28 @@ const SellerPage = () => {
   <div className="min-h-screen bg-white">
     {/* Product Header - Normal flow */}
     <div className="bg-white border-b">
-      <ProductHeader 
-        sellerMode={false} 
-        activeSection={activeTab} 
-        onTabChange={setActiveTab}
-        seller={seller}
-        isFollowing={isFollowing}
-        onFollow={handleFollow}
-        onMessage={handleMessage}
-        actionButtons={[
-          {
-            Icon: Heart,
-            active: isFollowing,
-            onClick: handleFollow,
-            activeColor: "#f43f5e"
-          },
-          {
-            Icon: MessageCircle,
-            onClick: handleMessage
-          }
-        ]} 
-      />
+     <ProductHeader
+  sellerMode={true}
+  activeSection={activeTab}
+  onTabChange={setActiveTab}
+  seller={seller}
+  isFollowing={isFollowing}
+  onFollow={handleFollow}
+  onMessage={handleMessage}
+  actionButtons={[
+    {
+      Icon: Heart,
+      active: isFollowing,
+      onClick: handleFollow,
+      activeColor: "#f43f5e"
+    },
+    {
+      Icon: MessageCircle,
+      onClick: handleMessage
+    }
+  ]}
+  inPanel={true} // ✅ This makes header normal flow
+/>
     </div>
 
     {/* Tabs Navigation - Normal flow */}
