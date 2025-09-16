@@ -43,64 +43,37 @@ const SellerPage = () => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [tabsHeight, setTabsHeight] = useState(0);
-  const [totalHeaderHeight, setTotalHeaderHeight] = useState(0);
-  const [isSticky, setIsSticky] = useState(false);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
-  // Measure header height on mount and resize
+  // Measure header heights
   useEffect(() => {
-    const updateHeaderHeight = () => {
+    const measureHeights = () => {
       if (headerRef.current) {
-        const headerRect = headerRef.current.getBoundingClientRect();
-        setHeaderHeight(headerRect.height);
+        setHeaderHeight(headerRef.current.offsetHeight);
       }
       if (tabsRef.current) {
-        const tabsRect = tabsRef.current.getBoundingClientRect();
-        setTabsHeight(tabsRect.height);
-      }
-      // Calculate total height when both are available
-      if (headerRef.current && tabsRef.current) {
-        const headerRect = headerRef.current.getBoundingClientRect();
-        const tabsRect = tabsRef.current.getBoundingClientRect();
-        setTotalHeaderHeight(headerRect.height + tabsRect.height);
+        setTabsHeight(tabsRef.current.offsetHeight);
       }
     };
 
-    // Initial measurement
-    updateHeaderHeight();
+    measureHeights();
     
-    // Add event listeners
-    window.addEventListener('resize', updateHeaderHeight);
-    window.addEventListener('scroll', updateHeaderHeight);
-    
-    // Use multiple delays to ensure all components are rendered
-    const timers = [
-      setTimeout(updateHeaderHeight, 100),
-      setTimeout(updateHeaderHeight, 300),
-      setTimeout(updateHeaderHeight, 500)
+    const timeouts = [
+      setTimeout(measureHeights, 100),
+      setTimeout(measureHeights, 500),
+      setTimeout(measureHeights, 1000)
     ];
-    
+
+    const handleResize = () => measureHeights();
+    window.addEventListener('resize', handleResize);
+
     return () => {
-      window.removeEventListener('resize', updateHeaderHeight);
-      window.removeEventListener('scroll', updateHeaderHeight);
-      timers.forEach(timer => clearTimeout(timer));
+      window.removeEventListener('resize', handleResize);
+      timeouts.forEach(clearTimeout);
     };
-  }, []);
-
-  // Track sticky state
-  useEffect(() => {
-    const handleScroll = () => {
-      if (headerRef.current) {
-        const headerRect = headerRef.current.getBoundingClientRect();
-        setIsSticky(headerRect.top <= 0);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [seller]);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
@@ -152,10 +125,12 @@ const SellerPage = () => {
     );
   }
 
+  const totalStickyHeight = headerHeight + tabsHeight;
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Product-style Header with ref for measurement */}
-      <div ref={headerRef} className="relative z-40">
+      {/* Product Header - Fixed */}
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-background border-b">
         <ProductHeader 
           sellerMode={true} 
           activeSection={activeTab} 
@@ -179,20 +154,21 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Sticky Tabs Navigation - positioned just below header */}
-      <div ref={tabsRef} className="relative z-30">
+      {/* Sticky Tabs Navigation - Fixed below header */}
+      <div 
+        ref={tabsRef} 
+        className="fixed left-0 right-0 z-40 bg-background border-b"
+        style={{ top: `${headerHeight}px` }}
+      >
         <SellerStickyTabsNavigation
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          headerHeight={headerHeight}
+          headerHeight={0} // Not needed since we're handling positioning ourselves
         />
       </div>
 
-      {/* Spacer div to prevent content from hiding behind sticky headers */}
-      <div style={{ height: `${Math.max(totalHeaderHeight, 120)}px` }} />
-
-      {/* Main Content Area */}
-      <div className="relative">
+      {/* Main Content - Offset by total sticky height */}
+      <div style={{ paddingTop: `${totalStickyHeight + 20}px` }}>
         {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
@@ -209,7 +185,7 @@ const SellerPage = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="flex gap-2 items-center">
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-40">
@@ -223,7 +199,7 @@ const SellerPage = () => {
                     <SelectItem value="rating">Highest Rated</SelectItem>
                   </SelectContent>
                 </Select>
-                
+
                 <div className="flex border rounded-md">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -346,159 +322,10 @@ const SellerPage = () => {
         {/* About Tab */}
         {activeTab === 'about' && (
           <div className="container mx-auto px-4 py-6">
-            <div className="max-w-4xl">
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Seller Info */}
-                <div>
-                  <div className="flex items-center gap-4 mb-6">
-                    <img
-                      src={getSellerLogoUrl(seller.logo)}
-                      alt={seller.business_name}
-                      className="w-20 h-20 rounded-full object-cover border-2 border-border"
-                    />
-                    <div>
-                      <h1 className="text-2xl font-bold">{seller.business_name}</h1>
-                      <div className="flex items-center gap-2 mt-1">
-                        <VerificationBadge isVerified={seller.is_verified} />
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">4.8</span>
-                          <span className="text-muted-foreground">({formatNumber(1250)} reviews)</span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Member since {new Date(seller.created_at).getFullYear()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        <Store className="w-4 h-4" />
-                        About Our Store
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        {seller.description || "This seller hasn't provided a description yet."}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                        <Users className="w-5 h-5 text-blue-500" />
-                        <div>
-                          <p className="font-medium">{formatNumber(12500)}</p>
-                          <p className="text-xs text-muted-foreground">Followers</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                        <Package className="w-5 h-5 text-green-500" />
-                        <div>
-                          <p className="font-medium">{products.length}</p>
-                          <p className="text-xs text-muted-foreground">Products</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                        <Star className="w-5 h-5 text-yellow-500" />
-                        <div>
-                          <p className="font-medium">4.8/5</p>
-                          <p className="text-xs text-muted-foreground">Rating</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                        <CheckCircle className="w-5 h-5 text-purple-500" />
-                        <div>
-                          <p className="font-medium">98%</p>
-                          <p className="text-xs text-muted-foreground">Positive</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Contact & Policies */}
-                <div className="space-y-6">
-                  {/* Contact Information */}
-                  <div>
-                    <h3 className="font-semibold mb-3">Contact Information</h3>
-                    <div className="space-y-3">
-                      {seller.email && (
-                        <div className="flex items-center gap-3 p-3 rounded-lg border">
-                          <Mail className="w-4 h-4 text-blue-500" />
-                          <div>
-                            <p className="text-sm font-medium">Email</p>
-                            <p className="text-sm text-muted-foreground">{seller.email}</p>
-                          </div>
-                        </div>
-                      )}
-                      {seller.phone && (
-                        <div className="flex items-center gap-3 p-3 rounded-lg border">
-                          <Phone className="w-4 h-4 text-green-500" />
-                          <div>
-                            <p className="text-sm font-medium">Phone</p>
-                            <p className="text-sm text-muted-foreground">{seller.phone}</p>
-                          </div>
-                        </div>
-                      )}
-                      {seller.address && (
-                        <div className="flex items-center gap-3 p-3 rounded-lg border">
-                          <MapPin className="w-4 h-4 text-red-500" />
-                          <div>
-                            <p className="text-sm font-medium">Location</p>
-                            <p className="text-sm text-muted-foreground">{seller.address}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Store Policies */}
-                  <div>
-                    <h3 className="font-semibold mb-3">Store Policies</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3 p-3 rounded-lg border">
-                        <Shield className="w-5 h-5 text-green-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium">Buyer Protection</p>
-                          <p className="text-xs text-muted-foreground">
-                            30-day return policy on all items. Full refund or exchange guarantee.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 rounded-lg border">
-                        <Truck className="w-5 h-5 text-blue-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium">Fast Shipping</p>
-                          <p className="text-xs text-muted-foreground">
-                            2-3 business days delivery. Free shipping on orders over $50.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 rounded-lg border">
-                        <CheckCircle className="w-5 h-5 text-purple-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium">Quality Guarantee</p>
-                          <p className="text-xs text-muted-foreground">
-                            100% authentic products. Quality checked before dispatch.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <Button onClick={handleFollow} variant={isFollowing ? "outline" : "default"} className="flex-1">
-                      <Heart className={`w-4 h-4 mr-2 ${isFollowing ? 'fill-red-500 text-red-500' : ''}`} />
-                      {isFollowing ? 'Following' : 'Follow'}
-                    </Button>
-                    <Button onClick={handleMessage} variant="outline" className="flex-1">
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Message
-                    </Button>
-                  </div>
-                </div>
-              </div>
+            <div className="text-center py-12">
+              <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">About Content</h3>
+              <p className="text-muted-foreground">About tab content will be displayed here.</p>
             </div>
           </div>
         )}
@@ -506,55 +333,10 @@ const SellerPage = () => {
         {/* Reviews Tab */}
         {activeTab === 'reviews' && (
           <div className="container mx-auto px-4 py-6">
-            <div className="max-w-4xl">
-              <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-              
-              {/* Review Summary */}
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="md:col-span-1">
-                  <div className="text-center p-6 rounded-lg border">
-                    <div className="text-4xl font-bold mb-2">4.8</div>
-                    <div className="flex justify-center mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star key={star} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Based on 1,250 reviews</p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2">
-                  <div className="space-y-2">
-                    {[5, 4, 3, 2, 1].map((rating) => (
-                      <div key={rating} className="flex items-center gap-2">
-                        <span className="text-sm w-8">{rating}</span>
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <div className="flex-1 bg-muted rounded-full h-2">
-                          <div 
-                            className="bg-yellow-400 h-2 rounded-full" 
-                            style={{ width: `${rating === 5 ? 70 : rating === 4 ? 20 : rating === 3 ? 5 : rating === 2 ? 3 : 2}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm text-muted-foreground w-12">
-                          {rating === 5 ? '875' : rating === 4 ? '250' : rating === 3 ? '63' : rating === 2 ? '38' : '24'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Sample Reviews */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Recent Reviews</h3>
-                <div className="text-center py-12">
-                  <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">Reviews coming soon</h3>
-                  <p className="text-muted-foreground">
-                    Individual customer reviews will be displayed here once the review system is implemented.
-                  </p>
-                </div>
-              </div>
+            <div className="text-center py-12">
+              <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Reviews Content</h3>
+              <p className="text-muted-foreground">Reviews tab content will be displayed here.</p>
             </div>
           </div>
         )}
