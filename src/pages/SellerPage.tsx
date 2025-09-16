@@ -100,16 +100,13 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Container with sticky header */}
-      <div className="sticky top-0 z-50 bg-white">
+      <div className="sticky top-0 z-50 bg-white border-b">
         <ProductHeader
           sellerMode={true}
-          inPanel={true} // Use inPanel to get relative positioning within sticky container
+          inPanel={true}
           activeSection={activeTab}
           onTabChange={setActiveTab}
-          seller={seller}
-          isFollowing={isFollowing}
-          onFollow={handleFollow}
-          onMessage={handleMessage}
+          forceScrolledState={true}
           actionButtons={[
             {
               Icon: Heart,
@@ -122,12 +119,14 @@ const SellerPage = () => {
               onClick: handleMessage
             }
           ]}
-          forceScrolledState={true}
+          showCloseIcon={false}
+          focusMode={false}
+          showHeaderInFocus={true}
         />
       </div>
 
       {/* Sticky Tabs Navigation */}
-      <div className="sticky top-16 z-40 bg-white border-b">
+      <div className="sticky top-[64px] z-40 bg-white border-b">
         <TabsNavigation
           tabs={tabs}
           activeTab={activeTab}
