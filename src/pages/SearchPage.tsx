@@ -198,7 +198,7 @@ const SearchPage = () => {
       </div>
 
       {/* Content with proper top spacing to account for fixed header */}
-      <div style={{ paddingTop: 16px }} className="relative">
+      <div style={{ paddingTop: `${headerHeight}px` }} className="relative">
         <SpaceSavingCategories
           onCategorySelect={handleCategorySelect}
           showHeader={true}
