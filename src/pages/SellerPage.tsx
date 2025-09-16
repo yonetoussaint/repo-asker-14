@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import SellerHeader from '@/components/seller/SellerHeader'; // Fixed import path
+import SellerHeader from '@/components/product/SellerHeader'; // Fixed import path
 import TabsNavigation from '@/components/home/TabsNavigation';
 
 const SellerPage = () => {
