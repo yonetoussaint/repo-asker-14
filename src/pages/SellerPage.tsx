@@ -44,6 +44,7 @@ const SellerPage = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
   const [tabsHeight, setTabsHeight] = useState(0);
   const [totalHeaderHeight, setTotalHeaderHeight] = useState(0);
+  const [isSticky, setIsSticky] = useState(false);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
@@ -52,27 +53,53 @@ const SellerPage = () => {
   useEffect(() => {
     const updateHeaderHeight = () => {
       if (headerRef.current) {
-        setHeaderHeight(headerRef.current.offsetHeight);
+        const headerRect = headerRef.current.getBoundingClientRect();
+        setHeaderHeight(headerRect.height);
       }
       if (tabsRef.current) {
-        setTabsHeight(tabsRef.current.offsetHeight);
+        const tabsRect = tabsRef.current.getBoundingClientRect();
+        setTabsHeight(tabsRect.height);
       }
       // Calculate total height when both are available
       if (headerRef.current && tabsRef.current) {
-        setTotalHeaderHeight(headerRef.current.offsetHeight + tabsRef.current.offsetHeight);
+        const headerRect = headerRef.current.getBoundingClientRect();
+        const tabsRect = tabsRef.current.getBoundingClientRect();
+        setTotalHeaderHeight(headerRect.height + tabsRect.height);
       }
     };
 
+    // Initial measurement
     updateHeaderHeight();
-    window.addEventListener('resize', updateHeaderHeight);
     
-    // Use a slight delay to ensure components are rendered
-    const timer = setTimeout(updateHeaderHeight, 100);
+    // Add event listeners
+    window.addEventListener('resize', updateHeaderHeight);
+    window.addEventListener('scroll', updateHeaderHeight);
+    
+    // Use multiple delays to ensure all components are rendered
+    const timers = [
+      setTimeout(updateHeaderHeight, 100),
+      setTimeout(updateHeaderHeight, 300),
+      setTimeout(updateHeaderHeight, 500)
+    ];
     
     return () => {
       window.removeEventListener('resize', updateHeaderHeight);
-      clearTimeout(timer);
+      window.removeEventListener('scroll', updateHeaderHeight);
+      timers.forEach(timer => clearTimeout(timer));
     };
+  }, []);
+
+  // Track sticky state
+  useEffect(() => {
+    const handleScroll = () => {
+      if (headerRef.current) {
+        const headerRect = headerRef.current.getBoundingClientRect();
+        setIsSticky(headerRect.top <= 0);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
@@ -128,7 +155,7 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Product-style Header with ref for measurement */}
-      <div ref={headerRef}>
+      <div ref={headerRef} className="relative z-40">
         <ProductHeader 
           sellerMode={true} 
           activeSection={activeTab} 
@@ -153,7 +180,7 @@ const SellerPage = () => {
       </div>
 
       {/* Sticky Tabs Navigation - positioned just below header */}
-      <div ref={tabsRef}>
+      <div ref={tabsRef} className="relative z-30">
         <SellerStickyTabsNavigation
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -161,8 +188,11 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Main Content Area - with proper spacing for sticky headers */}
-      <div className="relative" style={{ paddingTop: `${totalHeaderHeight}px` }}>
+      {/* Spacer div to prevent content from hiding behind sticky headers */}
+      <div style={{ height: `${Math.max(totalHeaderHeight, 120)}px` }} />
+
+      {/* Main Content Area */}
+      <div className="relative">
         {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
