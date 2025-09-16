@@ -29,120 +29,23 @@ import { toast } from 'sonner';
 import ProductHeader from '@/components/product/ProductHeader';
 import SellerStickyTabsNavigation from '@/components/seller/SellerStickyTabsNavigation';
 
-// Mock data for preview
-const mockSeller = {
-  id: '1',
-  name: 'TechGear Pro',
-  username: 'techgearpro',
-  bio: 'Premium electronics and accessories for tech enthusiasts',
-  avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
-  followers_count: 12500,
-  following_count: 234,
-  products_count: 89,
-  rating: 4.8,
-  reviews_count: 1240,
-  verified: true,
-  badges: ['Top Seller', 'Fast Shipping'],
-  location: 'New York, USA',
-  email: 'contact@techgearpro.com',
-  phone: '+1-555-0123',
-  created_at: '2022-01-15'
-};
-
-// Mock ProductHeader component
-const MockProductHeader = ({ 
-  sellerMode, 
-  activeSection, 
-  onTabChange, 
-  seller, 
-  isFollowing, 
-  onFollow, 
-  onMessage, 
-  actionButtons 
-}) => (
-  <div className="bg-white border-b px-4 py-3">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-3">
-          <img 
-            src={seller.avatar_url} 
-            alt={seller.name}
-            className="w-10 h-10 rounded-full"
-          />
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-lg font-semibold">{seller.name}</h1>
-              {seller.verified && <CheckCircle className="w-4 h-4 text-blue-500" />}
-            </div>
-            <p className="text-sm text-gray-600">@{seller.username}</p>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center space-x-2">
-        {actionButtons.map((button, index) => (
-          <button 
-            key={index}
-            onClick={button.onClick}
-            className={`p-2 hover:bg-gray-100 rounded-full ${button.active ? 'text-red-500' : 'text-gray-600'}`}
-          >
-            <button.Icon className="w-5 h-5" />
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-// Mock SellerStickyTabsNavigation component
-const MockSellerStickyTabsNavigation = ({ activeTab, onTabChange }) => {
-  const tabs = [
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'about', label: 'About', icon: Store },
-    { id: 'reviews', label: 'Reviews', icon: MessageCircle }
-  ];
-
-  return (
-    <div className="bg-white border-b px-4">
-      <div className="flex space-x-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id 
-                ? 'border-blue-500 text-blue-600' 
-                : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const SellerPage = () => {
-  const { sellerId } = useParams();
+  const { sellerId } = useParams<{ sellerId: string }>();
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popularity');
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Header height measurement
-  const headerRef = useRef(null);
-  const tabsRef = useRef(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [tabsHeight, setTabsHeight] = useState(0);
 
-  // Mock data usage instead of actual hooks
-  const seller = mockSeller;
-  const products = [];
-  const sellerLoading = false;
-  const productsLoading = false;
+  const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
+  const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
   // Measure header heights
   useEffect(() => {
@@ -172,13 +75,13 @@ const SellerPage = () => {
     };
   }, [seller]);
 
-  const getSellerLogoUrl = (imagePath) => {
+  const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
-    // Mock supabase call
-    return imagePath;
+    const { data } = supabase.storage.from('seller-logos').getPublicUrl(imagePath);
+    return data.publicUrl;
   };
 
-  const formatNumber = (num) => {
+  const formatNumber = (num: number): string => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
@@ -186,12 +89,11 @@ const SellerPage = () => {
 
   const handleFollow = () => {
     setIsFollowing(!isFollowing);
-    // Mock toast
-    console.log(isFollowing ? "Unfollowed" : "Following");
+    toast.success(isFollowing ? "Unfollowed" : "Following");
   };
 
   const handleMessage = () => {
-    console.log("Message feature coming soon");
+    toast.info("Message feature coming soon");
   };
 
   const filteredProducts = products.filter(product => 
@@ -217,8 +119,8 @@ const SellerPage = () => {
 
   if (sellerLoading || !seller) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -226,10 +128,10 @@ const SellerPage = () => {
   const totalStickyHeight = headerHeight + tabsHeight;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Product Header - Fixed */}
-      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white border-b">
-        <MockProductHeader 
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-background border-b">
+        <ProductHeader 
           sellerMode={true} 
           activeSection={activeTab} 
           onTabChange={setActiveTab}
@@ -255,10 +157,10 @@ const SellerPage = () => {
       {/* Sticky Tabs Navigation - Fixed below header */}
       <div 
         ref={tabsRef} 
-        className="fixed left-0 right-0 z-40 bg-white border-b"
+        className="fixed left-0 right-0 z-40 bg-background border-b"
         style={{ top: `${headerHeight}px` }}
       >
-        <MockSellerStickyTabsNavigation
+        <SellerStickyTabsNavigation
           activeTab={activeTab}
           onTabChange={setActiveTab}
           headerHeight={0} // Not needed since we're handling positioning ourselves
@@ -270,18 +172,150 @@ const SellerPage = () => {
         {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
-            <div className="text-center py-12">
-              <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Products Content</h3>
-              <p className="text-gray-600">Products tab content will be displayed here.</p>
+            {/* Search and Filter Controls */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex-1 max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 items-center">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="popularity">Most Popular</SelectItem>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="rating">Highest Rated</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="flex border rounded-md">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="rounded-r-none"
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                    className="rounded-l-none"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
-            {/* Added extra content to test scrolling */}
-            <div className="h-screen bg-gray-100 flex items-center justify-center">
-              <p className="text-lg">Scroll test area - Products tab</p>
+
+            {/* Products Count */}
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {sortedProducts.length} of {products.length} products
+              </p>
             </div>
-            <div className="h-screen bg-gray-200 flex items-center justify-center">
-              <p className="text-lg">More scroll test area - Products tab</p>
-            </div>
+
+            {/* Products Grid/List */}
+            {productsLoading ? (
+              <div className="text-center py-12">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p className="text-muted-foreground mt-2">Loading products...</p>
+              </div>
+            ) : sortedProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  {searchQuery ? 'No products found' : 'No products available'}
+                </h3>
+                <p className="text-muted-foreground">
+                  {searchQuery 
+                    ? 'Try adjusting your search terms or filters.' 
+                    : 'This seller hasn\'t listed any products yet.'
+                  }
+                </p>
+                {searchQuery && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSearchQuery('')}
+                    className="mt-4"
+                  >
+                    Clear search
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className={viewMode === 'grid' 
+                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" 
+                : "space-y-4"
+              }>
+                {sortedProducts.map((product) => (
+                  <Card 
+                    key={product.id} 
+                    className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/product/${product.id}`)}
+                  >
+                    <div className="aspect-square relative overflow-hidden">
+                      <img
+                        src={product.image_url || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop"}
+                        alt={product.name}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                      />
+                      {product.discount_percentage > 0 && (
+                        <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600">
+                          -{product.discount_percentage}%
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium truncate mb-1">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                        {product.description}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {product.discount_percentage > 0 ? (
+                            <div className="flex items-center gap-1">
+                              <span className="font-bold text-primary">
+                                ${(product.price * (1 - product.discount_percentage / 100)).toFixed(2)}
+                              </span>
+                              <span className="text-sm text-muted-foreground line-through">
+                                ${product.price.toFixed(2)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="font-bold">${product.price.toFixed(2)}</span>
+                          )}
+                        </div>
+                        {product.rating && (
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm">{product.rating.toFixed(1)}</span>
+                          </div>
+                        )}
+                      </div>
+                      {product.sales_count && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatNumber(product.sales_count)} sold
+                        </p>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -289,15 +323,15 @@ const SellerPage = () => {
         {activeTab === 'about' && (
           <div className="container mx-auto px-4 py-6">
             <div className="text-center py-12">
-              <Store className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">About Content</h3>
-              <p className="text-gray-600">About tab content will be displayed here.</p>
+              <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">About Content</h3>
+              <p className="text-muted-foreground">About tab content will be displayed here.</p>
             </div>
             {/* Added extra content to test scrolling */}
-            <div className="h-screen bg-gray-100 flex items-center justify-center">
+            <div className="h-screen bg-muted/20 flex items-center justify-center">
               <p className="text-lg">Scroll test area - About tab</p>
             </div>
-            <div className="h-screen bg-gray-200 flex items-center justify-center">
+            <div className="h-screen bg-muted/40 flex items-center justify-center">
               <p className="text-lg">More scroll test area - About tab</p>
             </div>
           </div>
@@ -307,18 +341,18 @@ const SellerPage = () => {
         {activeTab === 'reviews' && (
           <div className="container mx-auto px-4 py-6">
             <div className="text-center py-12">
-              <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Reviews Content</h3>
-              <p className="text-gray-600">Reviews tab content will be displayed here.</p>
+              <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Reviews Content</h3>
+              <p className="text-muted-foreground">Reviews tab content will be displayed here.</p>
             </div>
             {/* Added extra content to test scrolling */}
-            <div className="h-screen bg-gray-100 flex items-center justify-center">
+            <div className="h-screen bg-muted/20 flex items-center justify-center">
               <p className="text-lg">Scroll test area - Reviews tab</p>
             </div>
-            <div className="h-screen bg-gray-200 flex items-center justify-center">
+            <div className="h-screen bg-muted/40 flex items-center justify-center">
               <p className="text-lg">More scroll test area - Reviews tab</p>
             </div>
-            <div className="h-screen bg-gray-300 flex items-center justify-center">
+            <div className="h-screen bg-muted/60 flex items-center justify-center">
               <p className="text-lg">Even more scroll test area - Reviews tab</p>
             </div>
           </div>
