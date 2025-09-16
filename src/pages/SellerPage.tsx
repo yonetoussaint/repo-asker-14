@@ -41,7 +41,6 @@ const SellerPage = () => {
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
   useEffect(() => {
-    // Set initial header height
     if (headerRef.current) {
       setHeaderHeight(headerRef.current.offsetHeight);
     }
@@ -52,7 +51,6 @@ const SellerPage = () => {
       const headerHeight = headerRef.current.offsetHeight;
       const tabsTop = tabsRef.current.getBoundingClientRect().top;
       
-      // When tabs reach the bottom of the header, make them sticky
       setIsSticky(tabsTop <= headerHeight);
     };
 
@@ -110,7 +108,6 @@ const SellerPage = () => {
     }
   });
 
-  // Define tabs for the TabsNavigation component
   const tabs = [
     { id: 'products', label: 'Products' },
     { id: 'about', label: 'About' },
