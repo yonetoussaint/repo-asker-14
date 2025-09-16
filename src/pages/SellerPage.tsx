@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSeller, useSellerProducts } from '@/hooks/useSeller';
-import { 
-  Heart, 
-  MessageCircle, 
-  Star, 
+import {
+  Heart,
+  MessageCircle,
+  Star,
   Package,
   Search,
   Grid3X3,
@@ -12,7 +12,7 @@ import {
   Store,
   MapPin,
   Calendar,
-  Users
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -96,7 +96,7 @@ const SellerPage = () => {
 
   const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath)
-      return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
+      return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face';
     const { data } = supabase.storage.from('seller-logos').getPublicUrl(imagePath);
     return data.publicUrl;
   };
@@ -114,11 +114,11 @@ const SellerPage = () => {
 
   const handleFollow = () => {
     setIsFollowing(!isFollowing);
-    toast.success(isFollowing ? "Unfollowed" : "Following");
+    toast.success(isFollowing ? 'Unfollowed' : 'Following');
   };
 
   const handleMessage = () => {
-    toast.info("Message feature coming soon");
+    toast.info('Message feature coming soon');
   };
 
   const filteredProducts = products.filter(
@@ -129,24 +129,24 @@ const SellerPage = () => {
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
-      case "newest":
+      case 'newest':
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      case "price-low":
+      case 'price-low':
         return a.price - b.price;
-      case "price-high":
+      case 'price-high':
         return b.price - a.price;
-      case "rating":
+      case 'rating':
         return (b.rating || 0) - (a.rating || 0);
-      case "popularity":
+      case 'popularity':
       default:
         return (b.sales_count || 0) - (a.sales_count || 0);
     }
   });
 
   const tabs = [
-    { id: "products", label: "Products" },
-    { id: "about", label: "About" },
-    { id: "reviews", label: "Reviews" },
+    { id: 'products', label: 'Products' },
+    { id: 'about', label: 'About' },
+    { id: 'reviews', label: 'Reviews' },
   ];
 
   if (sellerLoading || !seller) {
@@ -160,10 +160,7 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-white overflow-visible">
       {/* Fixed Header */}
-      <div
-        ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-50 bg-white border-b"
-      >
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white border-b">
         <SellerHeader
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -175,7 +172,7 @@ const SellerPage = () => {
               Icon: Heart,
               active: isFollowing,
               onClick: handleFollow,
-              activeColor: "#f43f5e",
+              activeColor: '#f43f5e',
             },
             {
               Icon: MessageCircle,
@@ -188,8 +185,7 @@ const SellerPage = () => {
 
       {/* Main Content padding top fixed */}
       <div className="bg-white pt-4">
-        {/* TikTok style seller profile section */}
-        {activeTab === "products" && (
+        {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6 border-b">
             <div className="flex items-center space-x-6">
               <img
@@ -199,11 +195,9 @@ const SellerPage = () => {
               />
               <div className="flex-1 min-w-0">
                 <h1 className="text-3xl font-bold truncate">{seller.store_name}</h1>
-                <p className="text-muted-foreground text-sm mt-1 truncate">
-                  {seller.description}
-                </p>
+                <p className="text-muted-foreground text-sm mt-1 truncate">{seller.description}</p>
                 <div className="flex space-x-8 mt-4 text-sm text-muted-foreground">
-                  {typeof seller.follower_count === "number" && (
+                  {typeof seller.follower_count === 'number' && (
                     <div className="flex flex-col items-center">
                       <span className="font-semibold text-lg">{formatNumber(seller.follower_count)}</span>
                       <span>Followers</span>
@@ -225,12 +219,9 @@ const SellerPage = () => {
           </div>
         )}
 
-        {/* Tabs Navigation - sticky below header */}
         <div
           ref={tabsRef}
-          className={`bg-white border-b z-50 transition-all ${
-            isSticky ? "sticky shadow-md" : ""
-          }`}
+          className={`bg-white border-b z-50 transition-all ${isSticky ? 'sticky shadow-md' : ''}`}
           style={isSticky ? { top: headerHeight } : undefined}
         >
           <div className="container mx-auto">
@@ -238,11 +229,9 @@ const SellerPage = () => {
           </div>
         </div>
 
-        {/* Placeholder to prevent jump */}
         {isSticky && <div style={{ height: tabsHeight }} />}
 
-        {/* Tab content with padding to avoid overlap */}
-        {activeTab === "products" && (
+        {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6" style={{ paddingTop: headerHeight + tabsHeight }}>
             {/* Search and Filter Controls */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -274,17 +263,17 @@ const SellerPage = () => {
 
                 <div className="flex border rounded-md">
                   <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setViewMode("grid")}
+                    onClick={() => setViewMode('grid')}
                     className="rounded-r-none"
                   >
                     <Grid3X3 className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
+                    variant={viewMode === 'list' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setViewMode("list")}
+                    onClick={() => setViewMode('list')}
                     className="rounded-l-none"
                   >
                     <List className="w-4 h-4" />
@@ -310,15 +299,15 @@ const SellerPage = () => {
               <div className="text-center py-12">
                 <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
-                  {searchQuery ? "No products found" : "No products available"}
+                  {searchQuery ? 'No products found' : 'No products available'}
                 </h3>
                 <p className="text-muted-foreground">
                   {searchQuery
-                    ? "Try adjusting your search terms or filters."
+                    ? 'Try adjusting your search terms or filters.'
                     : "This seller hasn't listed any products yet."}
                 </p>
                 {searchQuery && (
-                  <Button variant="outline" onClick={() => setSearchQuery("")} className="mt-4">
+                  <Button variant="outline" onClick={() => setSearchQuery('')} className="mt-4">
                     Clear search
                   </Button>
                 )}
@@ -326,9 +315,9 @@ const SellerPage = () => {
             ) : (
               <div
                 className={
-                  viewMode === "grid"
-                    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                    : "space-y-4"
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+                    : 'space-y-4'
                 }
               >
                 {sortedProducts.map((product) => (
@@ -341,7 +330,7 @@ const SellerPage = () => {
                       <img
                         src={
                           product.image_url ||
-                          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop"
+                          'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop'
                         }
                         alt={product.name}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
@@ -354,13 +343,16 @@ const SellerPage = () => {
                     </div>
                     <div className="p-4">
                       <h3 className="font-medium truncate mb-1">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                        {product.description}
+                      </p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           {product.discount_percentage > 0 ? (
                             <div className="flex items-center gap-1">
                               <span className="font-bold text-primary">
-                                ${(product.price * (1 - product.discount_percentage / 100)).toFixed(2)}
+                                $
+                                {(product.price * (1 - product.discount_percentage / 100)).toFixed(2)}
                               </span>
                               <span className="text-sm text-muted-foreground line-through">
                                 ${product.price.toFixed(2)}
@@ -378,7 +370,9 @@ const SellerPage = () => {
                         )}
                       </div>
                       {product.sales_count && (
-                        <p className="text-xs text-muted-foreground mt-1">{formatNumber(product.sales_count)} sold</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatNumber(product.sales_count)} sold
+                        </p>
                       )}
                     </div>
                   </Card>
@@ -387,7 +381,7 @@ const SellerPage = () => {
             )}
           </div>
         )}
-        {activeTab === "about" && (
+        {activeTab === 'about' && (
           <div className="container mx-auto px-4 py-6" style={{ paddingTop: headerHeight + tabsHeight }}>
             <div className="text-center py-12">
               <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -396,7 +390,7 @@ const SellerPage = () => {
             </div>
           </div>
         )}
-        {activeTab === "reviews" && (
+        {activeTab === 'reviews' && (
           <div className="container mx-auto px-4 py-6" style={{ paddingTop: headerHeight + tabsHeight }}>
             <div className="text-center py-12">
               <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
