@@ -41,21 +41,27 @@ const SellerPage = () => {
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
   useEffect(() => {
-    if (headerRef.current) {
-      setHeaderHeight(headerRef.current.offsetHeight);
-    }
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
 
     const handleScroll = () => {
-      if (!headerRef.current || !tabsRef.current) return;
-      
-      const headerHeight = headerRef.current.offsetHeight;
+      if (!tabsRef.current) return;
+
       const tabsTop = tabsRef.current.getBoundingClientRect().top;
-      
-      setIsSticky(tabsTop <= headerHeight);
+      setIsSticky(tabsTop <= 0);
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateHeaderHeight);
+    };
   }, []);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
@@ -124,10 +130,10 @@ const SellerPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Sticky Header */}
+      {/* Fixed Header */}
       <div 
         ref={headerRef}
-        className="sticky top-0 z-50 bg-white border-b"
+        className="fixed top-0 left-0 right-0 z-50 bg-white border-b"
       >
         <SellerHeader
           activeTab={activeTab}
@@ -156,14 +162,14 @@ const SellerPage = () => {
       </div>
 
       {/* Main Content - accounting for header height */}
-      <div className="bg-white" style={{ paddingTop: `${headerHeight}px` }}>
+      <div className="bg-white pt-16">
         {/* Seller Info Section (above tabs) */}
         <div className="container mx-auto px-4 py-6 border-b">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
               <h2 className="text-2xl font-bold mb-2">{seller.store_name}</h2>
               <p className="text-muted-foreground mb-4">{seller.description}</p>
-              
+
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {seller.location && (
                   <div className="flex items-center">
@@ -171,25 +177,25 @@ const SellerPage = () => {
                     {seller.location}
                   </div>
                 )}
-                
+
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-1" />
                   Member since {formatDate(seller.created_at)}
                 </div>
-                
+
                 <div className="flex items-center">
                   <Users className="w-4 h-4 mr-1" />
                   {formatNumber(seller.follower_count || 0)} followers
                 </div>
               </div>
             </div>
-            
+
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <span className="text-sm">Response Rate</span>
                 <span className="font-semibold">{seller.response_rate || 95}%</span>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <span className="text-sm">Response Time</span>
                 <span className="font-semibold">{seller.response_time || 'Within hours'}</span>
@@ -198,11 +204,10 @@ const SellerPage = () => {
           </div>
         </div>
 
-        {/* Tabs Navigation - initially in normal flow, becomes sticky on scroll */}
+        {/* Tabs Navigation - becomes sticky on scroll */}
         <div 
           ref={tabsRef}
-          className={`bg-white border-b z-40 ${isSticky ? 'sticky' : ''}`}
-          style={isSticky ? { top: `${headerHeight}px` } : {}}
+          className={`bg-white border-b z-40 transition-all ${isSticky ? 'fixed top-16 left-0 right-0 shadow-md' : ''}`}
         >
           <div className="container mx-auto">
             <TabsNavigation
@@ -212,6 +217,9 @@ const SellerPage = () => {
             />
           </div>
         </div>
+
+        {/* Add padding when tabs are sticky to prevent content jump */}
+        {isSticky && <div className="h-12"></div>}
 
         {/* Tab Content */}
         {/* Products Tab */}
