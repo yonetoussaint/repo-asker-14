@@ -1,0 +1,18 @@
+{
+  "header": {
+    "search": "Rechercher des produits",
+    "selectLanguage": "Sélectionnez votre langue",
+    "selectLocation": "Sélectionnez votre emplacement",
+    "language": "Langue",
+    "location": "Emplacement",
+    "searchPlaceholder": "Rechercher...",
+    "notifications": "Notifications",
+    "cart": "Panier",
+    "allCategories": "Toutes les catégories",
+    "voiceSearchCancel": "Annuler",
+    "continue": "Continuer",
+    "finish": "Terminer"
+  },
+  "noResults": "Aucun résultat trouvé",
+  "tryAdjustingSearch": "Essayez d'ajuster vos termes de recherche"
+}

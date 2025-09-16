@@ -1,0 +1,15 @@
+-- Insert sample review data for testing
+INSERT INTO reviews (product_id, user_name, rating, title, comment, verified_purchase, helpful_count, created_at) VALUES 
+-- Reviews for product "aae97882-a3a1-4db5-b4f5-156705cd10ee" (default product in ProductDetail)
+('aae97882-a3a1-4db5-b4f5-156705cd10ee', 'Sarah Johnson', 5, 'Excellent Quality!', 'I''ve been using this for 3 months now and it''s been fantastic. The quality is top-notch and it works exactly as described. Highly recommend to anyone looking for a reliable solution. The shipping was fast and the packaging was excellent.', true, 42, '2024-03-15 10:30:00'),
+('aae97882-a3a1-4db5-b4f5-156705cd10ee', 'Mike Chen', 4, 'Good value for money', 'Good value for money. The product works well, though I wish the setup was a bit easier. Customer service was helpful when I had questions. Overall satisfied with the purchase and would recommend it to others.', false, 18, '2024-03-10 14:20:00'),
+('aae97882-a3a1-4db5-b4f5-156705cd10ee', 'Emily Rodriguez', 5, 'Perfect!', 'Exactly what I was looking for. Great quality and fast delivery. Will definitely order again!', true, 28, '2024-03-08 09:15:00'),
+('aae97882-a3a1-4db5-b4f5-156705cd10ee', 'David Kim', 4, 'Very satisfied', 'Works as advertised. Good build quality and reasonable price. Shipping took a bit longer than expected but overall happy with the purchase.', true, 15, '2024-03-05 16:45:00'),
+('aae97882-a3a1-4db5-b4f5-156705cd10ee', 'Lisa Wang', 3, 'Average product', 'It''s okay but not amazing. Does what it''s supposed to do but I''ve seen better alternatives. Price is fair though.', false, 8, '2024-03-02 11:30:00'),
+('aae97882-a3a1-4db5-b4f5-156705cd10ee', 'James Wilson', 5, 'Outstanding!', 'This exceeded my expectations! The quality is premium and it arrived much faster than promised. Highly recommend this seller and product.', true, 35, '2024-02-28 13:20:00'),
+('aae97882-a3a1-4db5-b4f5-156705cd10ee', 'Maria Garcia', 4, 'Good purchase', 'Happy with this purchase. Good quality for the price. Customer service was responsive when I had questions about shipping.', true, 22, '2024-02-25 08:45:00'),
+
+-- Reviews for single product "22222222-2222-2222-2222-222222222222" (SingleProductDetail)
+('22222222-2222-2222-2222-222222222222', 'Alex Thompson', 5, 'Amazing product!', 'This is exactly what I needed. The quality is superb and it works perfectly. Fast shipping and great packaging. Would buy again!', true, 31, '2024-03-12 12:00:00'),
+('22222222-2222-2222-2222-222222222222', 'Jennifer Lee', 4, 'Good quality', 'Nice product overall. Works well and seems durable. Only minor complaint is that the instructions could be clearer.', true, 19, '2024-03-07 15:30:00'),
+('22222222-2222-2222-2222-222222222222', 'Robert Brown', 5, 'Excellent!', 'Top quality product. Arrived quickly and exactly as described. Very happy with this purchase and the seller.', true, 25, '2024-03-01 10:15:00');

@@ -1,0 +1,1 @@
+export { ProductEditDialog } from './ProductEditDialog';

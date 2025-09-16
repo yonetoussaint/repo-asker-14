@@ -1,0 +1,26 @@
+{
+  "header": {
+    "search": "Search for products",
+    "selectLanguage": "Select your language",
+    "selectLocation": "Select your location",
+    "language": "Language",
+    "location": "Location",
+    "searchPlaceholder": "Search...",
+    "notifications": "Notifications",
+    "cart": "Cart",
+    "allCategories": "All Categories",
+    "voiceSearchCancel": "Cancel",
+    "continue": "Continue",
+    "finish": "Finish"
+  },
+  "newsletter": {
+    "title": "Subscribe to our Newsletter",
+    "description": "Get exclusive deals and special offers right to your inbox",
+    "placeholder": "Your email address",
+    "subscribe": "Subscribe",
+    "subscribing": "Subscribing...",
+    "terms": "By subscribing, you agree to our Terms and Privacy Policy"
+  },
+  "noResults": "No results found",
+  "tryAdjustingSearch": "Try adjusting your search terms"
+}

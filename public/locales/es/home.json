@@ -1,0 +1,29 @@
+{
+  "forYou": "Para Ti",
+  "recommendations": "Para Ti",
+  "posts": "Publicaciones",
+  "shops": "Tiendas",
+  "trending": "Tendencias",
+  "videos": "Vídeos",
+  "browse": "Navegar",
+  "cart": "Carrito",
+  "wishlist": "Lista de deseos",
+  "account": "Cuenta",
+  "messages": "Mensajes",
+  "navigation": {
+    "home": "Inicio",
+    "shorts": "Cortos",
+    "feeds": "Feeds",
+    "categories": "Categorías",
+    "messages": "Mensajes",
+    "wallet": "Billetera",
+    "more": "Más",
+    "account": "Cuenta",
+    "videos": "Vídeos",
+    "notifications": "Notificaciones",
+    "bookmarks": "Favoritos",
+    "friends": "Amigos",
+    "shopping": "Compras",
+    "settings": "Configuración"
+  }
+}

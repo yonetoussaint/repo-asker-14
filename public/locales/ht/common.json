@@ -1,0 +1,18 @@
+{
+  "header": {
+    "search": "Chèche pwodwi",
+    "selectLanguage": "Chwazi lang ou",
+    "selectLocation": "Chwazi lokasyon ou",
+    "language": "Lang",
+    "location": "Lokasyon",
+    "searchPlaceholder": "Chèche...",
+    "notifications": "Notifikasyon",
+    "cart": "Panye",
+    "allCategories": "Tout Kategori",
+    "voiceSearchCancel": "Sispann",
+    "continue": "Kontinye",
+    "finish": "Fini"
+  },
+  "noResults": "Pa gen rezilta yo jwenn",
+  "tryAdjustingSearch": "Eseye ajiste mo rechèch ou yo"
+}

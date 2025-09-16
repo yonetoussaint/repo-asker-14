@@ -1,0 +1,29 @@
+{
+  "forYou": "Pou Ou",
+  "recommendations": "Pou Ou",
+  "posts": "Piblikasyon",
+  "shops": "Boutik",
+  "trending": "Tandans",
+  "videos": "Videyo",
+  "browse": "Gade",
+  "cart": "Panye",
+  "wishlist": "Lis Dezi",
+  "account": "Kont",
+  "messages": "Mesaj",
+  "navigation": {
+    "home": "Akèy",
+    "shorts": "Kout",
+    "feeds": "Nouvo",
+    "categories": "Kategori",
+    "messages": "Mesaj",
+    "wallet": "Bous",
+    "more": "Pi plis",
+    "account": "Kont",
+    "videos": "Videyo",
+    "notifications": "Notifikasyon",
+    "bookmarks": "Favori",
+    "friends": "Zanmi",
+    "shopping": "Komès",
+    "settings": "Paramèt"
+  }
+}

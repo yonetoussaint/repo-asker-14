@@ -1,0 +1,26 @@
+{
+  "header": {
+    "search": "Buscar productos",
+    "selectLanguage": "Selecciona tu idioma",
+    "selectLocation": "Selecciona tu ubicación",
+    "language": "Idioma",
+    "location": "Ubicación",
+    "searchPlaceholder": "Buscar...",
+    "notifications": "Notificaciones",
+    "cart": "Carrito",
+    "allCategories": "Todas las categorías",
+    "voiceSearchCancel": "Cancelar",
+    "continue": "Continuar",
+    "finish": "Terminar"
+  },
+  "newsletter": {
+    "title": "Suscríbete a nuestro boletín",
+    "description": "Recibe ofertas exclusivas y ofertas especiales directamente en tu bandeja de entrada",
+    "placeholder": "Tu dirección de correo",
+    "subscribe": "Suscribirse",
+    "subscribing": "Suscribiendo...",
+    "terms": "Al suscribirte, aceptas nuestros Términos y Política de Privacidad"
+  },
+  "noResults": "No se encontraron resultados",
+  "tryAdjustingSearch": "Intenta ajustar tus términos de búsqueda"
+}
