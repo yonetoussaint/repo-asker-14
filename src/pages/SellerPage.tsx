@@ -167,7 +167,7 @@ const SellerPage = () => {
       {/* Main Content - Offset by header and tabs height */}
       <div 
         className="bg-white"
-        style={{ paddingTop: headerHeight + tabsHeight }}
+        style={{ paddingTop: headerHeight }}
       >
         {/* Products Tab */}
         {activeTab === 'products' && (
