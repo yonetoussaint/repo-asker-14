@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSeller, useSellerProducts } from '@/hooks/useSeller';
 import { 
@@ -9,7 +9,10 @@ import {
   Search,
   Grid3X3,
   List,
-  Store
+  Store,
+  MapPin,
+  Calendar,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,21 +21,38 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import SellerHeader from '@/components/product/SellerHeader'; // Fixed import path
+import SellerHeader from '@/components/product/SellerHeader';
 import TabsNavigation from '@/components/home/TabsNavigation';
 
 const SellerPage = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
   const navigate = useNavigate();
-  const headerRef = useRef<HTMLDivElement>(null); // Added missing ref
+  const headerRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isSticky, setIsSticky] = useState(false);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!headerRef.current || !tabsRef.current) return;
+      
+      const headerHeight = headerRef.current.offsetHeight;
+      const tabsTop = tabsRef.current.getBoundingClientRect().top;
+      
+      // When tabs reach the bottom of the header, make them sticky
+      setIsSticky(tabsTop <= headerHeight);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
@@ -44,6 +64,14 @@ const SellerPage = () => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long' 
+    });
   };
 
   const handleFollow = () => {
@@ -93,7 +121,7 @@ const SellerPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Container with sticky header */}
+      {/* Sticky Header */}
       <div 
         ref={headerRef}
         className="sticky top-0 z-50 bg-white border-b"
@@ -124,17 +152,64 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Sticky Tabs Navigation */}
-      <div className="sticky top-[64px] z-40 bg-white border-b">
-        <TabsNavigation
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      </div>
-
       {/* Main Content */}
       <div className="bg-white">
+        {/* Seller Info Section (above tabs) */}
+        <div className="container mx-auto px-4 py-6 border-b">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <h2 className="text-2xl font-bold mb-2">{seller.store_name}</h2>
+              <p className="text-muted-foreground mb-4">{seller.description}</p>
+              
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                {seller.location && (
+                  <div className="flex items-center">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {seller.location}
+                  </div>
+                )}
+                
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  Member since {formatDate(seller.created_at)}
+                </div>
+                
+                <div className="flex items-center">
+                  <Users className="w-4 h-4 mr-1" />
+                  {formatNumber(seller.follower_count || 0)} followers
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span className="text-sm">Response Rate</span>
+                <span className="font-semibold">{seller.response_rate || 95}%</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span className="text-sm">Response Time</span>
+                <span className="font-semibold">{seller.response_time || 'Within hours'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs Navigation - initially in normal flow, becomes sticky on scroll */}
+        <div 
+          ref={tabsRef}
+          className={`bg-white border-b z-40 ${isSticky ? 'sticky top-[64px]' : ''}`}
+        >
+          <div className="container mx-auto">
+            <TabsNavigation
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </div>
+        </div>
+
+        {/* Tab Content */}
         {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
