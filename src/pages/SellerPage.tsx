@@ -35,11 +35,17 @@ const SellerPage = () => {
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isSticky, setIsSticky] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
   useEffect(() => {
+    // Set initial header height
+    if (headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
+    }
+
     const handleScroll = () => {
       if (!headerRef.current || !tabsRef.current) return;
       
@@ -152,8 +158,8 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Main Content */}
-      <div className="bg-white">
+      {/* Main Content - accounting for header height */}
+      <div className="bg-white" style={{ paddingTop: `${headerHeight}px` }}>
         {/* Seller Info Section (above tabs) */}
         <div className="container mx-auto px-4 py-6 border-b">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -198,7 +204,8 @@ const SellerPage = () => {
         {/* Tabs Navigation - initially in normal flow, becomes sticky on scroll */}
         <div 
           ref={tabsRef}
-          className={`bg-white border-b z-40 ${isSticky ? 'sticky top-[64px]' : ''}`}
+          className={`bg-white border-b z-40 ${isSticky ? 'sticky' : ''}`}
+          style={isSticky ? { top: `${headerHeight}px` } : {}}
         >
           <div className="container mx-auto">
             <TabsNavigation
