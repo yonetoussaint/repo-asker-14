@@ -148,6 +148,7 @@ const SellerPage = () => {
               onClick: handleMessage
             }
           ]}
+inPanel={true}
         />
       </div>
 
