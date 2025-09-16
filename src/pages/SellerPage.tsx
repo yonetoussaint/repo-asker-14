@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import ProductHeader from '@/components/product/ProductHeader';
+import SellerHeader from '@/components/product/SellerHeader';
 import TabsNavigation from '@/components/home/TabsNavigation';
 
 const SellerPage = () => {
@@ -100,30 +100,34 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Container with sticky header */}
-      <div className="sticky top-0 z-50 bg-white border-b">
-        <ProductHeader
-          sellerMode={true}
-          inPanel={true}
-          activeSection={activeTab}
-          onTabChange={setActiveTab}
-          forceScrolledState={true}
-          actionButtons={[
-            {
-              Icon: Heart,
-              active: isFollowing,
-              onClick: handleFollow,
-              activeColor: "#f43f5e"
-            },
-            {
-              Icon: MessageCircle,
-              onClick: handleMessage
-            }
-          ]}
-          showCloseIcon={false}
-          focusMode={false}
-          showHeaderInFocus={true}
-        />
-      </div>
+      // In the SellerPage component, replace the ProductHeader section with:
+<div 
+  ref={headerRef}
+  className="sticky top-0 z-50 bg-white border-b"
+>
+  <SellerHeader
+    sellerMode={true}
+    activeTab={activeTab}
+    onTabChange={setActiveTab}
+    seller={seller}
+    isFollowing={isFollowing}
+    onFollow={handleFollow}
+    onMessage={handleMessage}
+    actionButtons={[
+      {
+        Icon: Heart,
+        active: isFollowing,
+        onClick: handleFollow,
+        activeColor: "#f43f5e"
+      },
+      {
+        Icon: MessageCircle,
+        onClick: handleMessage
+      }
+    ]}
+    forceScrolledState={true}
+  />
+</div>
 
       {/* Sticky Tabs Navigation */}
       <div className="sticky top-[64px] z-40 bg-white border-b">
