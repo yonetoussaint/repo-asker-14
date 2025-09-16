@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ProductHeader from '@/components/product/ProductHeader';
-import TabsNavigation from '@/components/home/TabsNavigation'; // Import the tabs component
+import TabsNavigation from '@/components/home/TabsNavigation';
 
 const SellerPage = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
@@ -36,33 +36,9 @@ const SellerPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [headerHeight, setHeaderHeight] = useState(0);
-  const [tabsHeight, setTabsHeight] = useState(0);
-
-  const headerRef = useRef<HTMLDivElement>(null);
-  const tabsRef = useRef<HTMLDivElement>(null);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
-
-  useEffect(() => {
-    // Calculate header and tabs height for content positioning
-    const updateHeights = () => {
-      if (headerRef.current) {
-        setHeaderHeight(headerRef.current.offsetHeight);
-      }
-      if (tabsRef.current) {
-        setTabsHeight(tabsRef.current.offsetHeight);
-      }
-    };
-
-    updateHeights();
-    window.addEventListener('resize', updateHeights);
-
-    return () => {
-      window.removeEventListener('resize', updateHeights);
-    };
-  }, [seller]);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
@@ -123,43 +99,33 @@ const SellerPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Product Header - Sticky at the top */}
-      <div 
-        ref={headerRef}
-        className="sticky top-0 z-50 bg-white border-b"
-      >
-        <ProductHeader
-          sellerMode={true}
-          activeSection={activeTab}
-          onTabChange={setActiveTab}
-          seller={seller}
-          isFollowing={isFollowing}
-          onFollow={handleFollow}
-          onMessage={handleMessage}
-          actionButtons={[
-            {
-              Icon: Heart,
-              active: isFollowing,
-              onClick: handleFollow,
-              activeColor: "#f43f5e"
-            },
-            {
-              Icon: MessageCircle,
-              onClick: handleMessage
-            }
-          ]}
-          inPanel={true}
-          // Add this prop to make header sticky instead of fixed
-          forceScrolledState={true}
-        />
-      </div>
+      {/* Sticky Product Header */}
+      <ProductHeader
+        sellerMode={true}
+        stickyMode={true} // Enable sticky positioning
+        activeSection={activeTab}
+        onTabChange={setActiveTab}
+        seller={seller}
+        isFollowing={isFollowing}
+        onFollow={handleFollow}
+        onMessage={handleMessage}
+        actionButtons={[
+          {
+            Icon: Heart,
+            active: isFollowing,
+            onClick: handleFollow,
+            activeColor: "#f43f5e"
+          },
+          {
+            Icon: MessageCircle,
+            onClick: handleMessage
+          }
+        ]}
+        forceScrolledState={true}
+      />
 
-      {/* Tabs Navigation - Sticky below the header */}
-      <div 
-        ref={tabsRef}
-        className="sticky z-40 bg-white border-b"
-        style={{ top: headerHeight }}
-      >
+      {/* Sticky Tabs Navigation */}
+      <div className="sticky top-16 z-40 bg-white border-b">
         <TabsNavigation
           tabs={tabs}
           activeTab={activeTab}
@@ -167,11 +133,8 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Main Content - Offset by header and tabs height */}
-      <div 
-        className="bg-white"
-        style={{ paddingTop: headerHeight }}
-      >
+      {/* Main Content */}
+      <div className="bg-white">
         {/* Products Tab */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
