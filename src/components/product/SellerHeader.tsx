@@ -50,7 +50,7 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-30 flex flex-col">
+    <div className="bg-white ">
       {/* Main Header */}
       <div 
         className="py-2 px-3 w-full transition-all duration-700 border-b"
