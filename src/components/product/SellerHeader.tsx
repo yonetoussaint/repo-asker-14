@@ -50,7 +50,7 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
   }
 
   return (
-    <div className="bg-white ">
+    <div className="sticky top-0 left-0 right-0 z-30 flex flex-col bg-white">
       {/* Main Header */}
       <div 
         className="py-2 px-3 w-full transition-all duration-700 border-b"
@@ -63,7 +63,7 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
           {/* Left side - Back button */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <BackButton progress={displayProgress} />
-            
+
             {/* Seller info when scrolled */}
             {displayProgress >= 0.7 && seller && (
               <div className="flex items-center gap-2 ml-2">
@@ -158,7 +158,7 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <button
                 onClick={onFollow}
