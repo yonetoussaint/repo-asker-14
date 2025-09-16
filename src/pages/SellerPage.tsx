@@ -45,54 +45,57 @@ const SellerPage = () => {
   useEffect(() => {
     const updateHeaderHeight = () => {
       if (headerRef.current) {
-        setHeaderHeight(headerRef.current.offsetHeight);
+        return headerRef.current.offsetHeight;
       }
+      return 0;
     };
+
+    const updateTabsOffset = (headerH: number) => {
+      if (tabsRef.current) {
+        const rect = tabsRef.current.getBoundingClientRect();
+        // Calculate offset from top of document minus header height
+        return rect.top + window.scrollY - headerH;
+      }
+      return 0;
+    };
+
     const updateTabsHeight = () => {
       if (tabsRef.current) {
         setTabsHeight(tabsRef.current.offsetHeight);
-        if (tabsInitialOffset.current === null) {
-          // Save initial offset relative to document top once
-          const rect = tabsRef.current.getBoundingClientRect();
-          tabsInitialOffset.current = rect.top + window.scrollY;
-        }
       }
     };
 
-    updateHeaderHeight();
+    // Initialize header height and tabs initial offset & height on mount
+    const initialHeaderHeight = updateHeaderHeight();
+    setHeaderHeight(initialHeaderHeight);
+    tabsInitialOffset.current = updateTabsOffset(initialHeaderHeight);
     updateTabsHeight();
 
     const handleResize = () => {
-      updateHeaderHeight();
+      const newHeaderHeight = updateHeaderHeight();
+      setHeaderHeight(newHeaderHeight);
+      tabsInitialOffset.current = updateTabsOffset(newHeaderHeight);
       updateTabsHeight();
-      // Reset initial offset on resize to recalc correct position
-      tabsInitialOffset.current = null;
-      if (tabsRef.current) {
-        const rect = tabsRef.current.getBoundingClientRect();
-        tabsInitialOffset.current = rect.top + window.scrollY;
-      }
     };
-
-    window.addEventListener('resize', handleResize);
 
     const handleScroll = () => {
       if (tabsInitialOffset.current === null) return;
 
-      // When scrolled past the tabs' initial document position minus header height => sticky
-      if (window.scrollY >= tabsInitialOffset.current - headerHeight) {
+      if (window.scrollY >= tabsInitialOffset.current) {
         setIsSticky(true);
       } else {
         setIsSticky(false);
       }
     };
 
+    window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll);
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
     };
-  }, [headerHeight]);
+  }, []);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
