@@ -171,8 +171,8 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Main Content - padding top accounts for fixed header height */}
-      <div className="bg-white" style={{ paddingTop: headerHeight }}>
+      {/* Main Content - fixed padding top 16px */}
+      <div className="bg-white pt-4">
         {/* Seller Info Section (above tabs) */}
         <div className="container mx-auto px-4 py-6 border-b">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
