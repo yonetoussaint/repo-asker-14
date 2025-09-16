@@ -32,10 +32,11 @@ interface ProductHeaderProps {
   onShareClick?: () => void;
   forceScrolledState?: boolean;
   actionButtons?: ActionButton[];
-  inPanel?: boolean; // New prop
-  customScrollProgress?: number; // New prop for external scroll progress
-  showCloseIcon?: boolean; // New prop to show X icon
-  onCloseClick?: () => void; // New prop for close handler
+  inPanel?: boolean;
+  customScrollProgress?: number;
+  showCloseIcon?: boolean;
+  onCloseClick?: () => void;
+  sellerMode?: boolean; // New prop for seller mode
 }
 
 const ProductHeader: React.FC<ProductHeaderProps> = ({ 
@@ -49,10 +50,11 @@ const ProductHeader: React.FC<ProductHeaderProps> = ({
   onShareClick,
   forceScrolledState = false,
   actionButtons,
-  inPanel = false, // Default to false
-  customScrollProgress, // New prop for external scroll progress
-  showCloseIcon = false, // New prop for close icon
-  onCloseClick // New prop for close handler
+  inPanel = false,
+  customScrollProgress,
+  showCloseIcon = false,
+  onCloseClick,
+  sellerMode = false // New prop for seller mode
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const { progress: internalProgress } = useScrollProgress();
@@ -63,8 +65,8 @@ const ProductHeader: React.FC<ProductHeaderProps> = ({
   const progress = inPanel ? (customScrollProgress || 0) : internalProgress;
   
 
-  // Use forced state or actual scroll progress
-  const displayProgress = forceScrolledState ? 1 : progress;
+  // Use forced state, seller mode, or actual scroll progress
+  const displayProgress = forceScrolledState || sellerMode ? 1 : progress;
 
   // Debug logging for panel scroll behavior
   React.useEffect(() => {

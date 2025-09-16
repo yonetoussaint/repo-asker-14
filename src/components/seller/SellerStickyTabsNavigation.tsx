@@ -17,9 +17,10 @@ const SellerStickyTabsNavigation: React.FC<SellerStickyTabsNavigationProps> = ({
 
   useEffect(() => {
     const handleScrollForStickyTabs = () => {
-      // Show sticky tabs when scrolled past the initial tabs
+      // Show sticky tabs when scrolled past the header area
       const scrollTop = window.scrollY;
-      setShowStickyTabs(scrollTop > 300);
+      // Adjust threshold to show tabs after header area (account for seller info section)
+      setShowStickyTabs(scrollTop > headerHeight + 100);
     };
 
     window.addEventListener('scroll', handleScrollForStickyTabs, { passive: true });
@@ -30,9 +31,16 @@ const SellerStickyTabsNavigation: React.FC<SellerStickyTabsNavigationProps> = ({
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
     
-    // Scroll to top of content area
+    // Scroll to appropriate section based on tab
+    const sectionOffsets = {
+      overview: headerHeight + 150,
+      products: headerHeight + 300,
+      contact: headerHeight + 500,
+      about: headerHeight + 400
+    };
+    
     window.scrollTo({
-      top: headerHeight + 200, // Adjust for header and seller info
+      top: sectionOffsets[tabId] || headerHeight + 200,
       behavior: 'smooth'
     });
   };
@@ -47,10 +55,10 @@ const SellerStickyTabsNavigation: React.FC<SellerStickyTabsNavigationProps> = ({
       <div className="w-full bg-white">
         <TabsNavigation
           tabs={[
+            { id: 'overview', label: 'Overview' },
             { id: 'products', label: 'Products' },
-            { id: 'categories', label: 'Categories' },
-            { id: 'about', label: 'About' },
-            { id: 'contact', label: 'Contact' }
+            { id: 'contact', label: 'Contact' },
+            { id: 'about', label: 'About' }
           ]}
           activeTab={activeTab}
           onTabChange={handleTabClick}
