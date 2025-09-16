@@ -37,6 +37,7 @@ const SellerPage = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [tabsHeight, setTabsHeight] = useState(0);
+  const tabsInitialOffset = useRef<number | null>(null);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
@@ -50,6 +51,11 @@ const SellerPage = () => {
     const updateTabsHeight = () => {
       if (tabsRef.current) {
         setTabsHeight(tabsRef.current.offsetHeight);
+        if (tabsInitialOffset.current === null) {
+          // Save initial offset relative to document top once
+          const rect = tabsRef.current.getBoundingClientRect();
+          tabsInitialOffset.current = rect.top + window.scrollY;
+        }
       }
     };
 
@@ -59,15 +65,25 @@ const SellerPage = () => {
     const handleResize = () => {
       updateHeaderHeight();
       updateTabsHeight();
+      // Reset initial offset on resize to recalc correct position
+      tabsInitialOffset.current = null;
+      if (tabsRef.current) {
+        const rect = tabsRef.current.getBoundingClientRect();
+        tabsInitialOffset.current = rect.top + window.scrollY;
+      }
     };
 
     window.addEventListener('resize', handleResize);
 
     const handleScroll = () => {
-      if (!tabsRef.current) return;
+      if (tabsInitialOffset.current === null) return;
 
-      const tabsTop = tabsRef.current.getBoundingClientRect().top;
-      setIsSticky(tabsTop <= headerHeight);
+      // When scrolled past the tabs' initial document position minus header height => sticky
+      if (window.scrollY >= tabsInitialOffset.current - headerHeight) {
+        setIsSticky(true);
+      } else {
+        setIsSticky(false);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -173,46 +189,48 @@ const SellerPage = () => {
 
       {/* Main Content - fixed padding top 16px */}
       <div className="bg-white pt-4">
-        {/* Seller Info Section (above tabs) */}
-        <div className="container mx-auto px-4 py-6 border-b">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <h2 className="text-2xl font-bold mb-2">{seller.store_name}</h2>
-              <p className="text-muted-foreground mb-4">{seller.description}</p>
+        {/* Conditionally render Seller Info only for 'products' tab */}
+        {activeTab === 'products' && (
+          <div className="container mx-auto px-4 py-6 border-b">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <h2 className="text-2xl font-bold mb-2">{seller.store_name}</h2>
+                <p className="text-muted-foreground mb-4">{seller.description}</p>
 
-              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                {seller.location && (
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  {seller.location && (
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {seller.location}
+                    </div>
+                  )}
+
                   <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {seller.location}
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Member since {formatDate(seller.created_at)}
                   </div>
-                )}
 
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 mr-1" />
-                  Member since {formatDate(seller.created_at)}
-                </div>
-
-                <div className="flex items-center">
-                  <Users className="w-4 h-4 mr-1" />
-                  {formatNumber(seller.follower_count || 0)} followers
+                  <div className="flex items-center">
+                    <Users className="w-4 h-4 mr-1" />
+                    {formatNumber(seller.follower_count || 0)} followers
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <span className="text-sm">Response Rate</span>
-                <span className="font-semibold">{seller.response_rate || 95}%</span>
-              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <span className="text-sm">Response Rate</span>
+                  <span className="font-semibold">{seller.response_rate || 95}%</span>
+                </div>
 
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <span className="text-sm">Response Time</span>
-                <span className="font-semibold">{seller.response_time || 'Within hours'}</span>
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <span className="text-sm">Response Time</span>
+                  <span className="font-semibold">{seller.response_time || 'Within hours'}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Tabs Navigation - sticky below header */}
         <div
@@ -232,10 +250,9 @@ const SellerPage = () => {
         {/* Placeholder div to prevent content jump when sticky */}
         {isSticky && <div style={{ height: tabsHeight }} />}
 
-        {/* Tab Content */}
+        {/* Tab Content - only active tab content is shown */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6">
-            {/* Search and Filter Controls */}
             <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 max-w-md">
                 <div className="relative">
@@ -382,7 +399,6 @@ const SellerPage = () => {
           </div>
         )}
 
-        {/* About Tab */}
         {activeTab === 'about' && (
           <div className="container mx-auto px-4 py-6">
             <div className="text-center py-12">
@@ -393,7 +409,6 @@ const SellerPage = () => {
           </div>
         )}
 
-        {/* Reviews Tab */}
         {activeTab === 'reviews' && (
           <div className="container mx-auto px-4 py-6">
             <div className="text-center py-12">
