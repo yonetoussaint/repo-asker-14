@@ -149,7 +149,7 @@ const SellerPage = () => {
       {/* Fixed Header */}
       <div 
         ref={headerRef}
-        className="sticky top-0 left-0 right-0 z-50 bg-white border-b"
+        className="fixed top-0 left-0 right-0 z-50 bg-white border-b"
       >
         <SellerHeader
           activeTab={activeTab}
