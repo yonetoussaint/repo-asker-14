@@ -167,10 +167,21 @@ const SellerPage = () => {
 
       {/* Tab Content */}
       <div className="p-4">
+        {/* Add padding top when sticky tabs are visible */}
+        <div className="pt-16" />
 
-        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div id="overview" className="space-y-4">
+            <div className="text-center py-8">
+              <h3 className="text-lg font-semibold mb-2">Store Overview</h3>
+              <p className="text-muted-foreground">Store information and statistics will be shown here.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Products Tab Content */}
         {activeTab === 'products' && (
-          <div className="space-y-4">
+          <div id="products" className="space-y-4">
             {/* Clean Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -246,23 +257,9 @@ const SellerPage = () => {
           </div>
         )}
 
-        {activeTab === 'categories' && (
-          <div className="space-y-4">
-            <div className="text-center py-12">
-              <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Product Categories</h3>
-              <p className="text-muted-foreground">Browse products by category.</p>
-              {seller.category && (
-                <Badge variant="secondary" className="mt-2">
-                  {seller.category}
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
-
+        {/* About Tab Content */}
         {activeTab === 'about' && (
-          <div className="space-y-6">
+          <div id="about" className="space-y-6">
             <div>
               <h3 className="font-semibold mb-3">About {seller.name}</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -295,8 +292,9 @@ const SellerPage = () => {
           </div>
         )}
 
+        {/* Contact Tab Content */}
         {activeTab === 'contact' && (
-          <div className="space-y-6">
+          <div id="contact" className="space-y-6">
             <div>
               <h3 className="font-semibold mb-4">Contact Information</h3>
               <div className="space-y-4">
