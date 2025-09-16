@@ -91,6 +91,7 @@ const SellerPage = () => {
       {/* Product-style Header */}
       <div ref={headerRef} className="relative z-50">
         <ProductHeader
+          sellerMode={true} // Force scrolled state for seller pages
           activeSection={activeSection}
           onTabChange={(section) => setActiveSection(section)}
           focusMode={focusMode}
