@@ -36,23 +36,19 @@ const SellerPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isSticky, setIsSticky] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  const [tabsHeight, setTabsHeight] = useState(0);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
   useEffect(() => {
-    const updateHeights = () => {
+    const updateHeaderHeight = () => {
       if (headerRef.current) {
         setHeaderHeight(headerRef.current.offsetHeight);
       }
-      if (tabsRef.current) {
-        setTabsHeight(tabsRef.current.offsetHeight);
-      }
     };
 
-    updateHeights();
-    window.addEventListener('resize', updateHeights);
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
 
     const handleScroll = () => {
       if (!tabsRef.current) return;
@@ -62,21 +58,9 @@ const SellerPage = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    
-    // Use MutationObserver to detect changes in header content
-    const observer = new MutationObserver(updateHeights);
-    if (headerRef.current) {
-      observer.observe(headerRef.current, { 
-        childList: true, 
-        subtree: true, 
-        characterData: true 
-      });
-    }
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', updateHeights);
-      observer.disconnect();
+      window.removeEventListener('resize', updateHeaderHeight);
     };
   }, []);
 
@@ -178,7 +162,7 @@ const SellerPage = () => {
       </div>
 
       {/* Main Content - accounting for header height */}
-      <div className="bg-white" style={{ paddingTop: `${headerHeight}px` }}>
+      <div className="bg-white pt-16">
         {/* Seller Info Section (above tabs) */}
         <div className="container mx-auto px-4 py-6 border-b">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -223,8 +207,7 @@ const SellerPage = () => {
         {/* Tabs Navigation - becomes sticky on scroll */}
         <div 
           ref={tabsRef}
-          className={`bg-white border-b z-40 transition-all ${isSticky ? 'fixed left-0 right-0 shadow-md' : ''}`}
-          style={isSticky ? { top: `${headerHeight}px` } : {}}
+          className={`bg-white border-b z-40 transition-all ${isSticky ? 'fixed top-16 left-0 right-0 shadow-md' : ''}`}
         >
           <div className="container mx-auto">
             <TabsNavigation
@@ -236,7 +219,7 @@ const SellerPage = () => {
         </div>
 
         {/* Add padding when tabs are sticky to prevent content jump */}
-        {isSticky && <div style={{ height: `${tabsHeight}px` }}></div>}
+        {isSticky && <div className="h-12"></div>}
 
         {/* Tab Content */}
         {/* Products Tab */}
