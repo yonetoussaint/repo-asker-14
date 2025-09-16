@@ -148,7 +148,9 @@ const SellerPage = () => {
               onClick: handleMessage
             }
           ]}
-inPanel={true}
+          inPanel={true}
+          // Add this prop to make header sticky instead of fixed
+          forceScrolledState={true}
         />
       </div>
 
