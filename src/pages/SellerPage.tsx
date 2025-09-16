@@ -42,7 +42,6 @@ const SellerPage = () => {
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
-  // Measure header height, tabs initial offset, tabs height, scroll sticky toggle
   useEffect(() => {
     const updateHeaderHeight = () => {
       if (headerRef.current) {
@@ -92,7 +91,6 @@ const SellerPage = () => {
     };
   }, []);
 
-  // Scroll adjustment on tab change: scroll tabs navigation into view just below header
   useEffect(() => {
     if (!tabsRef.current || !headerRef.current) return;
     const tabsTop = tabsRef.current.getBoundingClientRect().top + window.scrollY;
@@ -197,52 +195,54 @@ const SellerPage = () => {
         />
       </div>
 
-      {/* Main Content padding-top fixed */}
+      {/* Main Content padding top fixed */}
       <div className="bg-white pt-4">
-        {/* Seller Info only on products tab */}
+        {/* Seller Info styled like TikTok profile */}
         {activeTab === 'products' && (
           <div className="container mx-auto px-4 py-6 border-b">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
-                <h2 className="text-2xl font-bold mb-2">{seller.store_name}</h2>
-                <p className="text-muted-foreground mb-4">{seller.description}</p>
-
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  {seller.location && (
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {seller.location}
+            <div className="flex items-center space-x-6">
+              {/* Profile Image */}
+              <img
+                src={getSellerLogoUrl(seller.logo_path)}
+                alt={`${seller.store_name} logo`}
+                className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+              />
+              
+              {/* Name and Description */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-3xl font-bold truncate">
+                  {seller.store_name}
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1 truncate">
+                  {seller.description}
+                </p>
+                {/* Stats */}
+                <div className="flex space-x-8 mt-4 text-sm text-muted-foreground">
+                  {typeof seller.follower_count === 'number' && (
+                    <div className="flex flex-col items-center">
+                      <span className="font-semibold text-lg">
+                        {formatNumber(seller.follower_count)}
+                      </span>
+                      <span>Followers</span>
                     </div>
                   )}
-
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    Member since {formatDate(seller.created_at)}
+                  {products.length > 0 && (
+                    <div className="flex flex-col items-center">
+                      <span className="font-semibold text-lg">{products.length}</span>
+                      <span>Products</span>
+                    </div>
+                  )}
+                  <div className="flex flex-col items-center">
+                    <span className="font-semibold text-lg">{seller.response_rate || 95}%</span>
+                    <span>Response Rate</span>
                   </div>
-
-                  <div className="flex items-center">
-                    <Users className="w-4 h-4 mr-1" />
-                    {formatNumber(seller.follower_count || 0)} followers
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <span className="text-sm">Response Rate</span>
-                  <span className="font-semibold">{seller.response_rate || 95}%</span>
-                </div>
-
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <span className="text-sm">Response Time</span>
-                  <span className="font-semibold">{seller.response_time || 'Within hours'}</span>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tabs Navigation - sticky using sticky position */}
+        {/* Tabs Navigation - sticky below header */}
         <div
           ref={tabsRef}
           className={`bg-white border-b z-50 transition-all ${isSticky ? 'sticky shadow-md' : ''}`}
@@ -257,7 +257,7 @@ const SellerPage = () => {
           </div>
         </div>
 
-        {/* Placeholder to prevent content jump */}
+        {/* Placeholder to prevent jump */}
         {isSticky && <div style={{ height: tabsHeight }} />}
 
         {/* Tab content with padding to avoid overlap */}
@@ -266,11 +266,10 @@ const SellerPage = () => {
             className="container mx-auto px-4 py-6"
             style={{ paddingTop: headerHeight + tabsHeight }}
           >
-            {/* Products tab content (rest unchanged) */}
+            {/* Products tab content unchanged */}
             {/* ... */}
           </div>
         )}
-
         {activeTab === 'about' && (
           <div
             className="container mx-auto px-4 py-6"
@@ -283,7 +282,6 @@ const SellerPage = () => {
             </div>
           </div>
         )}
-
         {activeTab === 'reviews' && (
           <div
             className="container mx-auto px-4 py-6"
@@ -296,7 +294,6 @@ const SellerPage = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
