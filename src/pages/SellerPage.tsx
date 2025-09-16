@@ -162,7 +162,7 @@ const SellerPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-visible">
       {/* Fixed Header */}
       <div 
         ref={headerRef}
@@ -235,10 +235,10 @@ const SellerPage = () => {
           </div>
         )}
 
-        {/* Tabs Navigation - sticky below header */}
+        {/* Tabs Navigation - use sticky positioning */}
         <div
           ref={tabsRef}
-          className={`bg-white border-b z-40 transition-all ${isSticky ? 'fixed left-0 right-0 shadow-md' : ''}`}
+          className={`bg-white border-b z-50 transition-all ${isSticky ? 'sticky shadow-md' : ''}`}
           style={isSticky ? { top: headerHeight } : undefined}
         >
           <div className="container mx-auto">
