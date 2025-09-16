@@ -99,30 +99,32 @@ const SellerPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Sticky Product Header */}
-      <ProductHeader
-        sellerMode={true}
-        stickyMode={true} // Enable sticky positioning
-        activeSection={activeTab}
-        onTabChange={setActiveTab}
-        seller={seller}
-        isFollowing={isFollowing}
-        onFollow={handleFollow}
-        onMessage={handleMessage}
-        actionButtons={[
-          {
-            Icon: Heart,
-            active: isFollowing,
-            onClick: handleFollow,
-            activeColor: "#f43f5e"
-          },
-          {
-            Icon: MessageCircle,
-            onClick: handleMessage
-          }
-        ]}
-        forceScrolledState={true}
-      />
+      {/* Container with sticky header */}
+      <div className="sticky top-0 z-50 bg-white">
+        <ProductHeader
+          sellerMode={true}
+          inPanel={true} // Use inPanel to get relative positioning within sticky container
+          activeSection={activeTab}
+          onTabChange={setActiveTab}
+          seller={seller}
+          isFollowing={isFollowing}
+          onFollow={handleFollow}
+          onMessage={handleMessage}
+          actionButtons={[
+            {
+              Icon: Heart,
+              active: isFollowing,
+              onClick: handleFollow,
+              activeColor: "#f43f5e"
+            },
+            {
+              Icon: MessageCircle,
+              onClick: handleMessage
+            }
+          ]}
+          forceScrolledState={true}
+        />
+      </div>
 
       {/* Sticky Tabs Navigation */}
       <div className="sticky top-16 z-40 bg-white border-b">
