@@ -1,21 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSeller, useSellerProducts } from '@/hooks/useSeller';
 import { 
   Heart, 
   MessageCircle, 
   Star, 
-  Users, 
   Package,
   Search,
   Grid3X3,
   List,
-  Shield,
-  Truck,
-  CheckCircle,
-  Mail,
-  Phone,
-  MapPin,
   Store
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,12 +18,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import SellerHeader from '@/components/product/SellerHeader';
+import SellerHeader from '@/components/seller/SellerHeader'; // Fixed import path
 import TabsNavigation from '@/components/home/TabsNavigation';
 
 const SellerPage = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
   const navigate = useNavigate();
+  const headerRef = useRef<HTMLDivElement>(null); // Added missing ref
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,34 +94,35 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Container with sticky header */}
-      // In the SellerPage component, replace the ProductHeader section with:
-<div 
-  ref={headerRef}
-  className="sticky top-0 z-50 bg-white border-b"
->
-  <SellerHeader
-    sellerMode={true}
-    activeTab={activeTab}
-    onTabChange={setActiveTab}
-    seller={seller}
-    isFollowing={isFollowing}
-    onFollow={handleFollow}
-    onMessage={handleMessage}
-    actionButtons={[
-      {
-        Icon: Heart,
-        active: isFollowing,
-        onClick: handleFollow,
-        activeColor: "#f43f5e"
-      },
-      {
-        Icon: MessageCircle,
-        onClick: handleMessage
-      }
-    ]}
-    forceScrolledState={true}
-  />
-</div>
+      <div 
+        ref={headerRef}
+        className="sticky top-0 z-50 bg-white border-b"
+      >
+        <SellerHeader
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          seller={{
+            ...seller,
+            logo_url: getSellerLogoUrl(seller.logo_url)
+          }}
+          isFollowing={isFollowing}
+          onFollow={handleFollow}
+          onMessage={handleMessage}
+          actionButtons={[
+            {
+              Icon: Heart,
+              active: isFollowing,
+              onClick: handleFollow,
+              activeColor: "#f43f5e"
+            },
+            {
+              Icon: MessageCircle,
+              onClick: handleMessage
+            }
+          ]}
+          forceScrolledState={true}
+        />
+      </div>
 
       {/* Sticky Tabs Navigation */}
       <div className="sticky top-[64px] z-40 bg-white border-b">
@@ -298,12 +293,6 @@ const SellerPage = () => {
               <h3 className="text-lg font-medium text-foreground mb-2">About Content</h3>
               <p className="text-muted-foreground">About tab content will be displayed here.</p>
             </div>
-            <div className="h-screen bg-muted/20 flex items-center justify-center">
-              <p className="text-lg">Scroll test area - About tab</p>
-            </div>
-            <div className="h-screen bg-muted/40 flex items-center justify-center">
-              <p className="text-lg">More scroll test area - About tab</p>
-            </div>
           </div>
         )}
 
@@ -314,15 +303,6 @@ const SellerPage = () => {
               <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">Reviews Content</h3>
               <p className="text-muted-foreground">Reviews tab content will be displayed here.</p>
-            </div>
-            <div className="h-screen bg-muted/20 flex items-center justify-center">
-              <p className="text-lg">Scroll test area - Reviews tab</p>
-            </div>
-            <div className="h-screen bg-muted/40 flex items-center justify-center">
-              <p className="text-lg">More scroll test area - Reviews tab</p>
-            </div>
-            <div className="h-screen bg-muted/60 flex items-center justify-center">
-              <p className="text-lg">Even more scroll test area - Reviews tab</p>
             </div>
           </div>
         )}
