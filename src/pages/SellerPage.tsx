@@ -27,9 +27,6 @@ import VerificationBadge from '@/components/shared/VerificationBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ProductHeader from '@/components/product/ProductHeader';
-import StickyTabsNavigation from '@/components/product/StickyTabsNavigation';
-import ProductScrollManager from '@/components/product/ProductScrollManager';
-import { useScrollProgress } from '@/components/product/header/useScrollProgress';
 import SellerStickyTabsNavigation from '@/components/seller/SellerStickyTabsNavigation';
 
 const SellerPage = () => {
@@ -41,21 +38,16 @@ const SellerPage = () => {
   const [sortBy, setSortBy] = useState('popularity');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
-  // Product detail style state management
-  const [focusMode, setFocusMode] = useState(false);
-  const [showHeaderInFocus, setShowHeaderInFocus] = useState(false);
-  const [showStickyRecommendations, setShowStickyRecommendations] = useState(false);
-  const [activeSection, setActiveSection] = useState('products');
-  const [headerHeight, setHeaderHeight] = useState(0);
+  // Header height for sticky navigation
+  const [headerHeight, setHeaderHeight] = useState(60);
 
   const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
   const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
 
-  // Refs for scroll management (similar to ProductDetail)
-  const headerRef = useRef<HTMLDivElement>(null);
-  const overviewRef = useRef<HTMLDivElement>(null);
-  const descriptionRef = useRef<HTMLDivElement>(null);
-  const verticalRecommendationsRef = useRef<HTMLDivElement>(null);
+  // Set header height on mount
+  useEffect(() => {
+    setHeaderHeight(60); // Fixed header height for seller pages
+  }, []);
 
   const getSellerLogoUrl = (imagePath?: string): string => {
     if (!imagePath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face";
@@ -89,14 +81,11 @@ const SellerPage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Product-style Header */}
-      <div ref={headerRef} className="relative z-50">
-        <ProductHeader
-          sellerMode={true} // Force scrolled state for seller pages
-          activeSection={activeSection}
-          onTabChange={(section) => setActiveSection(section)}
-          focusMode={focusMode}
-          showHeaderInFocus={showHeaderInFocus}
-          actionButtons={[
+      <ProductHeader
+        sellerMode={true} // Force scrolled state for seller pages
+        activeSection={activeTab}
+        onTabChange={setActiveTab}
+        actionButtons={[
             {
               Icon: Heart,
               active: isFollowing,
@@ -109,10 +98,9 @@ const SellerPage = () => {
             }
           ]}
         />
-      </div>
 
       {/* Overview/Gallery Section */}
-      <div ref={overviewRef} className="p-4 space-y-4">
+      <div className="p-4 space-y-4">
         {/* Seller Info Compact */}
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-3">
@@ -350,21 +338,6 @@ const SellerPage = () => {
           </div>
         )}
       </div>
-
-      {/* Scroll Management */}
-      <ProductScrollManager
-        focusMode={focusMode}
-        setFocusMode={setFocusMode}
-        setShowHeaderInFocus={setShowHeaderInFocus}
-        setShowStickyRecommendations={setShowStickyRecommendations}
-        setActiveSection={setActiveSection}
-        setActiveTab={setActiveTab}
-        setHeaderHeight={setHeaderHeight}
-        headerRef={headerRef}
-        overviewRef={overviewRef}
-        descriptionRef={descriptionRef}
-        verticalRecommendationsRef={verticalRecommendationsRef}
-      />
     </div>
   );
 };
