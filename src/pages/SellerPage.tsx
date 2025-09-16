@@ -138,10 +138,7 @@ const SellerPage = () => {
         <SellerHeader
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          seller={{
-            ...seller,
-            logo_url: getSellerLogoUrl(seller.logo_url)
-          }}
+          
           isFollowing={isFollowing}
           onFollow={handleFollow}
           onMessage={handleMessage}
