@@ -460,21 +460,26 @@ const SellerPage: React.FC = () => {
     return <ErrorMessage message="Failed to load products" />;
   }
 
-  // Scroll handling effect
+  // Scroll handling effect for sticky tabs
   useEffect(() => {
     const handleScroll = () => {
       if (!headerRef.current || !tabsRef.current) return;
 
       const headerHeight = headerRef.current.offsetHeight;
       const scrollY = window.scrollY;
-      const tabsOffsetTop = tabsRef.current.offsetTop - headerHeight;
+      
+      // Get the original position of tabs relative to the seller info section
+      const sellerInfoHeight = activeTab === 'products' ? 200 : 0; // Approximate seller info height
+      const tabsOriginalPosition = headerHeight + sellerInfoHeight;
 
-      setIsTabsSticky(scrollY > tabsOffsetTop);
+      // Make tabs sticky when scrolling past the seller info section
+      setIsTabsSticky(scrollY >= tabsOriginalPosition);
     };
 
     window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Call once to set initial state
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [activeTab]);
 
   // Action handlers
   const handleFollow = () => {
@@ -533,10 +538,10 @@ const SellerPage: React.FC = () => {
 
         <nav 
           ref={tabsRef}
-          className={`bg-white border-b transition-all duration-200 ${
+          className={`bg-white border-b transition-all duration-200 z-40 ${
             isTabsSticky 
-              ? 'sticky shadow-lg z-40' 
-              : ''
+              ? 'fixed left-0 right-0 shadow-lg' 
+              : 'relative'
           }`}
           style={isTabsSticky ? { top: headerHeight } : undefined}
         >
@@ -549,7 +554,10 @@ const SellerPage: React.FC = () => {
           </div>
         </nav>
 
-        <div className="container mx-auto px-4 py-6">
+        <div 
+          className="container mx-auto px-4 py-6" 
+          style={isTabsSticky ? { paddingTop: `${(tabsRef.current?.offsetHeight || 0) + 24}px` } : undefined}
+        >
           {activeTab === 'products' && (
             <ProductsTab
               products={products}
