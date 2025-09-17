@@ -11,6 +11,8 @@ import ProductsTab from './ProductsTab';
 import AboutTab from './AboutTab';
 import ReviewsTab from './ReviewsTab';
 import LoadingSpinner from './LoadingSpinner';
+// Import icons (example using Lucide React - adjust based on your icon library)
+import { Heart, MessageCircle } from 'lucide-react';
 
 const SellerPage = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
@@ -25,8 +27,9 @@ const SellerPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isTabsSticky, setIsTabsSticky] = useState(false);
 
-  const { data: seller, isLoading: sellerLoading } = useSeller(sellerId!);
-  const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId!);
+  // Add check for sellerId before using hooks
+  const { data: seller, isLoading: sellerLoading } = useSeller(sellerId || '');
+  const { data: products = [], isLoading: productsLoading } = useSellerProducts(sellerId || '');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,6 +54,11 @@ const SellerPage = () => {
   const handleMessage = () => {
     toast.info("Message feature coming soon");
   };
+
+  // Handle case where sellerId is not provided
+  if (!sellerId) {
+    return <div>Seller not found</div>;
+  }
 
   if (sellerLoading || !seller) {
     return <LoadingSpinner />;
