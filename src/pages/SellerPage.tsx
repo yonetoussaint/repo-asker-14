@@ -142,72 +142,71 @@ const SellerInfoSection: React.FC<{
   onlineStatus?: OnlineStatus;
 }> = ({ seller, products, onlineStatus }) => {
   return (
-  <section className="bg-white border-b">
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Main content area - no profile picture here */}
-        <div className="flex-1 space-y-4">
-          {/* Header with name and badges */}
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{seller.name}</h1>
-            {seller.verified && (
-              <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs">
-                <Star className="w-3 h-3 mr-1 fill-current" />
-                Verified
-              </Badge>
-            )}
+    <section className="bg-white border-b">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Main content area - no profile picture here */}
+          <div className="flex-1 space-y-4">
+            {/* Header with name and badges */}
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">{seller.name}</h1>
+              {seller.verified && (
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs">
+                  <Star className="w-3 h-3 mr-1 fill-current" />
+                  Verified
+                </Badge>
+              )}
+            </div>
+
+            {/* Description */}
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {seller.description || "No description available"}
+            </p>
+
+            {/* Stats row */}
+            <div className="flex flex-wrap justify-between gap-3 text-xs text-gray-500 py-1">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                <span>Since {formatDate(seller.created_at || new Date().toISOString()).split(' ')[1]}</span>
+              </div>
+              <span className="text-gray-300">|</span>
+              <div className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                <span>{formatNumber(seller.followers_count || 0)} followers</span>
+              </div>
+              <span className="text-gray-300">|</span>
+              <div className="flex items-center gap-1">
+                <span>{formatNumber(seller.total_sales)} sales</span>
+              </div>
+            </div>
           </div>
 
-          {/* Description */}
-          <p className="text-gray-600 text-sm leading-relaxed">
-            {seller.description || "No description available"}
-          </p>
+          {/* Right sidebar with profile picture and stats */}
+          <div className="flex lg:flex-col gap-4 lg:w-48">
+            {/* Profile Picture - same height as cards */}
+            <div className="flex-1 flex justify-center items-center">
+              <ProfileImage
+                src={seller.profile_image}
+                name={seller.name}
+                size="xl"
+                showOnlineStatus={true}
+                isOnline={onlineStatus?.isOnline || false}
+              />
+            </div>
 
-          {/* Stats row */}
-          <div className="flex flex-wrap justify-between gap-3 text-xs text-gray-500 py-1">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              <span>Since {formatDate(seller.created_at || new Date().toISOString()).split(' ')[1]}</span>
+            <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center h-16 flex flex-col justify-center">
+              <div className="text-lg font-bold text-gray-900">{seller.trust_score}/100</div>
+              <div className="text-xs text-gray-500">Trust Score</div>
             </div>
-            <span className="text-gray-300">|</span>
-            <div className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              <span>{formatNumber(seller.followers_count || 0)} followers</span>
-            </div>
-            <span className="text-gray-300">|</span>
-            <div className="flex items-center gap-1">
-              <span>{formatNumber(seller.total_sales)} sales</span>
+            <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center h-16 flex flex-col justify-center">
+              <div className="text-lg font-bold text-gray-900">{products.length}</div>
+              <div className="text-xs text-gray-500">Products</div>
             </div>
           </div>
         </div>
-
-        {/* Right sidebar with profile picture and stats */}
-        {/* Right sidebar with profile picture and stats */}
-<div className="flex lg:flex-col gap-4 lg:w-48">
-  {/* Profile Picture moved to sidebar - now matches card height */}
-  <div className="flex justify-center lg:justify-center h-16 flex flex-col justify-center">
-    <ProfileImage
-      src={seller.profile_image}
-      name={seller.name}
-      size="md"
-      showOnlineStatus={true}
-      isOnline={onlineStatus?.isOnline || false}
-    />
-  </div>
-
-  <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center h-16 flex flex-col justify-center">
-    <div className="text-lg font-bold text-gray-900">{seller.trust_score}/100</div>
-    <div className="text-xs text-gray-500">Trust Score</div>
-  </div>
-  <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center h-16 flex flex-col justify-center">
-    <div className="text-lg font-bold text-gray-900">{products.length}</div>
-    <div className="text-xs text-gray-500">Products</div>
-  </div>
-</div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
 };
 
 // Products Tab Component
