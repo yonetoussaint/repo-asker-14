@@ -385,6 +385,19 @@ const SellerPage: React.FC = () => {
   // Scroll handling effect for sticky tabs
   useEffect(() => {
     let tabsOriginalOffsetTop = 0;
+    let hasCalculatedOriginalPosition = false;
+
+    const calculateOriginalPosition = () => {
+      if (!headerRef.current || !tabsRef.current || hasCalculatedOriginalPosition) return;
+      
+      // Only calculate when tabs are in normal flow (not sticky)
+      if (!isTabsSticky) {
+        const tabsRect = tabsRef.current.getBoundingClientRect();
+        const scrollY = window.scrollY;
+        tabsOriginalOffsetTop = tabsRect.top + scrollY;
+        hasCalculatedOriginalPosition = true;
+      }
+    };
 
     const handleScroll = () => {
       if (!headerRef.current || !tabsRef.current) return;
@@ -392,31 +405,32 @@ const SellerPage: React.FC = () => {
       const scrollY = window.scrollY;
       const headerHeight = headerRef.current.offsetHeight;
 
-      // Calculate the original position of tabs when not sticky
-      if (!isTabsSticky && tabsOriginalOffsetTop === 0) {
-        tabsOriginalOffsetTop = tabsRef.current.getBoundingClientRect().top + scrollY;
-      }
+      // Calculate original position if not done yet
+      calculateOriginalPosition();
 
-      // Make tabs sticky when scrolling past their original position minus header height
-      // Return to normal flow when scrolling back above that point
-      const shouldBeSticky = scrollY >= (tabsOriginalOffsetTop - headerHeight);
+      // Determine if tabs should be sticky
+      const triggerPoint = tabsOriginalOffsetTop - headerHeight;
+      const shouldBeSticky = scrollY > triggerPoint && hasCalculatedOriginalPosition;
       
-      if (shouldBeSticky !== isTabsSticky) {
-        setIsTabsSticky(shouldBeSticky);
-      }
+      setIsTabsSticky(shouldBeSticky);
     };
 
-    // Add a small delay to ensure elements are rendered
+    // Reset calculation when tab changes or data loads
+    hasCalculatedOriginalPosition = false;
+    tabsOriginalOffsetTop = 0;
+
+    // Add a delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
-      window.addEventListener('scroll', handleScroll);
+      calculateOriginalPosition();
+      window.addEventListener('scroll', handleScroll, { passive: true });
       handleScroll(); // Call once to set initial state
-    }, 100);
+    }, 150);
 
     return () => {
       clearTimeout(timeoutId);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [activeTab, seller, isTabsSticky]);
+  }, [activeTab, seller]); // Removed isTabsSticky from dependencies to avoid circular updates
 
   // Action handlers
   const handleFollow = () => {
