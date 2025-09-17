@@ -142,37 +142,6 @@ const ProductsTab: React.FC<{
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="relative max-w-xs">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-9"
-          />
-        </div>
-        
-        <div className="text-sm text-muted-foreground">
-          {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} 
-          {searchQuery && ` matching "${searchQuery}"`}
-        </div>
-      </div>
-
-      {searchQuery && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Search results for:</span>
-          <Badge variant="secondary" className="text-xs">
-            {searchQuery}
-            <button
-              onClick={() => setSearchQuery('')}
-              className="ml-2 hover:text-destructive"
-            >
-              ×
-            </button>
-          </Badge>
-        </div>
-      )}
 
       {filteredProducts.length === 0 ? (
         <div className="text-center py-12 bg-muted/20 rounded-lg">
@@ -211,11 +180,6 @@ const ProductsTab: React.FC<{
                     <span>{((product.saves || 0) / 10 + 4).toFixed(1)}</span>
                   </div>
                 </div>
-                {product.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {product.description}
-                  </p>
-                )}
               </div>
             </Card>
           ))}
