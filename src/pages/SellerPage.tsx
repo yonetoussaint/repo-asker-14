@@ -183,26 +183,26 @@ const SellerInfoSection: React.FC<{
 
           {/* Right sidebar with profile picture and stats */}
           <div className="flex lg:flex-col gap-4 lg:w-48">
-            {/* Profile Picture moved to sidebar */}
-            <div className="flex justify-center lg:justify-center mb-2">
-              <ProfileImage
-                src={seller.profile_image}
-                name={seller.name}
-                size="lg"
-                showOnlineStatus={true}
-                isOnline={onlineStatus?.isOnline || false}
-              />
-            </div>
-            
-            <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-gray-900">{seller.trust_score}/100</div>
-              <div className="text-xs text-gray-500">Trust Score</div>
-            </div>
-            <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-lg font-bold text-gray-900">{products.length}</div>
-              <div className="text-xs text-gray-500">Products</div>
-            </div>
-          </div>
+        {/* Profile Picture moved to sidebar */}
+        <div className="flex justify-center lg:justify-center mb-2">
+          <ProfileImage
+            src={seller.profile_image}
+            name={seller.name}
+            size="lg"
+            showOnlineStatus={true}
+            isOnline={onlineStatus?.isOnline || false}
+          />
+        </div>
+        
+        <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center h-16 flex flex-col justify-center">
+          <div className="text-lg font-bold text-gray-900">{seller.trust_score}/100</div>
+          <div className="text-xs text-gray-500">Trust Score</div>
+        </div>
+        <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center h-16 flex flex-col justify-center">
+          <div className="text-lg font-bold text-gray-900">{products.length}</div>
+          <div className="text-xs text-gray-500">Products</div>
+        </div>
+      </div>
         </div>
       </div>
     </section>
