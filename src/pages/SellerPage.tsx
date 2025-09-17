@@ -47,7 +47,7 @@ interface OnlineStatus {
 const ProfileImage: React.FC<{ 
   src?: string; 
   name: string; 
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'xl' | 'lg';
   showOnlineStatus?: boolean;
   isOnline?: boolean;
 }> = ({ src, name, size = 'md', showOnlineStatus = false, isOnline = false }) => {
