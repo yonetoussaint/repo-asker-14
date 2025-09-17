@@ -35,6 +35,7 @@ interface Seller {
   total_sales: number;
   rating?: number;
   followers_count?: number;
+  profile_image?: string;
 }
 
 interface OnlineStatus {
@@ -42,6 +43,52 @@ interface OnlineStatus {
   lastSeen?: string;
 }
 
+// Profile Image Component
+const ProfileImage: React.FC<{ 
+  src?: string; 
+  name: string; 
+  size?: 'sm' | 'md' | 'lg';
+  showOnlineStatus?: boolean;
+  isOnline?: boolean;
+}> = ({ src, name, size = 'md', showOnlineStatus = false, isOnline = false }) => {
+  const sizeClasses = {
+    sm: 'w-8 h-8 text-xs',
+    md: 'w-16 h-16 text-lg',
+    lg: 'w-24 h-24 text-xl'
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  return (
+    <div className="relative flex-shrink-0">
+      <div className={`${sizeClasses[size]} rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-background shadow-sm`}>
+        {src ? (
+          <img 
+            src={src} 
+            alt={`${name}'s profile`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center font-semibold text-primary">
+            {getInitials(name)}
+          </div>
+        )}
+      </div>
+      {showOnlineStatus && (
+        <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background ${
+          isOnline ? 'bg-green-500' : 'bg-gray-400'
+        }`} />
+      )}
+    </div>
+  );
+};
 // Online Status Badge Component
 const OnlineStatusBadge: React.FC<{ isOnline: boolean; lastSeen?: string }> = ({ isOnline, lastSeen }) => {
   const getStatusText = () => {
@@ -99,9 +146,19 @@ const SellerInfoSection: React.FC<{
     <div className="container mx-auto px-4 py-6">
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 space-y-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-start gap-4">
+            {/* Profile Image */}
+            <ProfileImage
+              src={seller.profile_image}
+              name={seller.name}
+              size="lg"
+              showOnlineStatus={true}
+              isOnline={onlineStatus?.isOnline || false}
+            />
+            
+            {/* Seller Details */}
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-2xl font-bold text-foreground">{seller.name}</h1>
                 {seller.verified && (
                   <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
