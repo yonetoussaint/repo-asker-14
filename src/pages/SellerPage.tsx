@@ -37,6 +37,38 @@ interface Seller {
   followers_count?: number;
 }
 
+interface OnlineStatus {
+  isOnline: boolean;
+  lastSeen?: string;
+}
+
+// Online Status Badge Component
+const OnlineStatusBadge: React.FC<{ isOnline: boolean; lastSeen?: string }> = ({ isOnline, lastSeen }) => {
+  const getStatusText = () => {
+    if (isOnline) return "Online now";
+    if (lastSeen) {
+      const now = new Date();
+      const lastSeenDate = new Date(lastSeen);
+      const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60));
+      
+      if (diffInMinutes < 1) return "Just now";
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+      return `${Math.floor(diffInMinutes / 1440)}d ago`;
+    }
+    return "Offline";
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+      <span className={`text-xs ${isOnline ? 'text-green-600' : 'text-muted-foreground'}`}>
+        {getStatusText()}
+      </span>
+    </div>
+  );
+};
+
 // Loading Spinner Component
 const LoadingSpinner: React.FC = () => {
   return (
@@ -57,7 +89,11 @@ const ErrorMessage: React.FC<{ message: string }> = ({ message }) => (
 );
 
 // Seller Info Section Component
-const SellerInfoSection: React.FC<{ seller: Seller; products: Product[] }> = ({ seller, products }) => {
+const SellerInfoSection: React.FC<{ 
+  seller: Seller; 
+  products: Product[];
+  onlineStatus?: OnlineStatus;
+}> = ({ seller, products, onlineStatus }) => {
   return (
   <section className="bg-background border-b">
     <div className="container mx-auto px-4 py-6">
@@ -72,6 +108,12 @@ const SellerInfoSection: React.FC<{ seller: Seller; products: Product[] }> = ({ 
                     <Star className="w-3 h-3 mr-1 fill-current" />
                     Verified
                   </Badge>
+                )}
+                {onlineStatus && (
+                  <OnlineStatusBadge 
+                    isOnline={onlineStatus.isOnline} 
+                    lastSeen={onlineStatus.lastSeen} 
+                  />
                 )}
               </div>
               <p className="text-muted-foreground text-sm">
@@ -320,6 +362,12 @@ const SellerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [isTabsSticky, setIsTabsSticky] = useState(false);
+  
+  // Online status state - you would get this from your real-time data source
+  const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({
+    isOnline: true, // This would come from your WebSocket or polling
+    lastSeen: "2025-09-17T10:30:00Z" // ISO string from your backend
+  });
 
   // Handle case where sellerId is not provided
   if (!sellerId) {
@@ -346,7 +394,7 @@ const SellerPage: React.FC = () => {
 
     const calculateOriginalPosition = () => {
       if (!headerRef.current || !tabsRef.current || hasCalculatedOriginalPosition) return;
-      
+
       // Only calculate when tabs are in normal flow (not sticky)
       if (!isTabsSticky) {
         const tabsRect = tabsRef.current.getBoundingClientRect();
@@ -368,7 +416,7 @@ const SellerPage: React.FC = () => {
       // Determine if tabs should be sticky
       const triggerPoint = tabsOriginalOffsetTop - headerHeight;
       const shouldBeSticky = scrollY > triggerPoint && hasCalculatedOriginalPosition;
-      
+
       setIsTabsSticky(shouldBeSticky);
     };
 
@@ -388,6 +436,21 @@ const SellerPage: React.FC = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [activeTab, seller]); // Removed isTabsSticky from dependencies to avoid circular updates
+
+  // Example effect to simulate real-time online status updates
+  useEffect(() => {
+    // This is where you'd set up your WebSocket connection or polling
+    // For demo purposes, we'll simulate status changes
+    const interval = setInterval(() => {
+      // Randomly toggle online status for demo
+      setOnlineStatus(prev => ({
+        isOnline: Math.random() > 0.3, // 70% chance of being online
+        lastSeen: prev.isOnline ? new Date().toISOString() : prev.lastSeen
+      }));
+    }, 30000); // Update every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Action handlers
   const handleFollow = () => {
@@ -441,7 +504,11 @@ const SellerPage: React.FC = () => {
 
       <main style={{ paddingTop: headerHeight }}>
         {activeTab === 'products' && (
-          <SellerInfoSection seller={seller} products={products} />
+          <SellerInfoSection 
+            seller={seller} 
+            products={products} 
+            onlineStatus={onlineStatus}
+          />
         )}
 
         <nav 
