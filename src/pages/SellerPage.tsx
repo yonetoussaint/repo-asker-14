@@ -1,4 +1,3 @@
-// SellerPage.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSeller, useSellerProducts } from '@/hooks/useSeller';
