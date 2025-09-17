@@ -1,6 +1,7 @@
-// AboutTab.tsx
+
 import React from 'react';
-import { Card, Badge } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Star } from 'lucide-react';
 import { formatNumber, formatDate } from '@/lib/utils';
 
