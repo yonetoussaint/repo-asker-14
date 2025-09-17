@@ -1,4 +1,3 @@
-// ProductsTab.tsx
 import React from 'react';
 import { Search, Grid3X3, List, Package, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
