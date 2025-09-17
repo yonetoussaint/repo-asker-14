@@ -47,15 +47,16 @@ interface OnlineStatus {
 const ProfileImage: React.FC<{ 
   src?: string; 
   name: string; 
-  size?: 'sm' | 'md' | 'xl' | 'lg';
+  size?: 'sm' | 'md' | 'xl' | 'lg' | 'card';
   showOnlineStatus?: boolean;
   isOnline?: boolean;
 }> = ({ src, name, size = 'md', showOnlineStatus = false, isOnline = false }) => {
   const sizeClasses = {
     sm: 'w-8 h-8 text-xs',
     md: 'w-16 h-16 text-lg',
-    xl: 'w-16 h-16 text-lg',
-    lg: 'w-24 h-24 text-xl'
+    xl: 'w-24 h-24 text-xl',
+    lg: 'w-24 h-24 text-xl',
+    card: 'flex-1 h-16 flex items-center justify-center relative'
   };
 
   const getInitials = (name: string) => {
@@ -66,6 +67,23 @@ const ProfileImage: React.FC<{
       .toUpperCase()
       .slice(0, 2);
   };
+
+  if (size === 'card') {
+    return (
+      <div className={sizeClasses[size]}>
+        {src ? (
+          <img src={src} alt={name} className="w-16 h-16 rounded-full object-cover" />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+            {getInitials(name)}
+          </div>
+        )}
+        {showOnlineStatus && (
+          <div className={`absolute bottom-0 right-2 w-4 h-4 rounded-full border-2 border-white ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex-shrink-0">
@@ -90,6 +108,7 @@ const ProfileImage: React.FC<{
     </div>
   );
 };
+
 // Online Status Badge Component
 const OnlineStatusBadge: React.FC<{ isOnline: boolean; lastSeen?: string }> = ({ isOnline, lastSeen }) => {
   const getStatusText = () => {
@@ -98,7 +117,7 @@ const OnlineStatusBadge: React.FC<{ isOnline: boolean; lastSeen?: string }> = ({
       const now = new Date();
       const lastSeenDate = new Date(lastSeen);
       const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60));
-      
+
       if (diffInMinutes < 1) return "Just now";
       if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
       if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
@@ -415,7 +434,7 @@ const SellerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('products');
   const [searchQuery, setSearchQuery] = useState('');
   const [isTabsSticky, setIsTabsSticky] = useState(false);
-  
+
   // Online status state - you would get this from your real-time data source
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({
     isOnline: true, // This would come from your WebSocket or polling
