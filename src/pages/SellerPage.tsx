@@ -465,21 +465,27 @@ const SellerPage: React.FC = () => {
     const handleScroll = () => {
       if (!headerRef.current || !tabsRef.current) return;
 
-      const headerHeight = headerRef.current.offsetHeight;
       const scrollY = window.scrollY;
-      
-      // Get the original position of tabs relative to the seller info section
-      const sellerInfoHeight = activeTab === 'products' ? 200 : 0; // Approximate seller info height
-      const tabsOriginalPosition = headerHeight + sellerInfoHeight;
+      const tabsElement = tabsRef.current;
+      const tabsOffsetTop = tabsElement.offsetTop;
+      const headerHeight = headerRef.current.offsetHeight;
 
-      // Make tabs sticky when scrolling past the seller info section
-      setIsTabsSticky(scrollY >= tabsOriginalPosition);
+      // Make tabs sticky when user scrolls past the tabs original position
+      // minus the header height (so tabs stick right below the header)
+      setIsTabsSticky(scrollY >= (tabsOffsetTop - headerHeight));
     };
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Call once to set initial state
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [activeTab]);
+    // Add a small delay to ensure elements are rendered
+    const timeoutId = setTimeout(() => {
+      window.addEventListener('scroll', handleScroll);
+      handleScroll(); // Call once to set initial state
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [activeTab, seller]);
 
   // Action handlers
   const handleFollow = () => {
@@ -538,12 +544,12 @@ const SellerPage: React.FC = () => {
 
         <nav 
           ref={tabsRef}
-          className={`bg-white border-b transition-all duration-200 z-40 ${
+          className={`bg-white border-b transition-all duration-200 ${
             isTabsSticky 
-              ? 'fixed left-0 right-0 shadow-lg' 
+              ? 'fixed top-0 left-0 right-0 z-40 shadow-lg' 
               : 'relative'
           }`}
-          style={isTabsSticky ? { top: headerHeight } : undefined}
+          style={isTabsSticky ? { top: `${headerHeight}px` } : undefined}
         >
           <div className="container mx-auto">
             <TabsNavigation
@@ -554,10 +560,10 @@ const SellerPage: React.FC = () => {
           </div>
         </nav>
 
-        <div 
-          className="container mx-auto px-4 py-6" 
-          style={isTabsSticky ? { paddingTop: `${(tabsRef.current?.offsetHeight || 0) + 24}px` } : undefined}
-        >
+        {/* Spacer div when tabs are sticky to prevent content jumping */}
+        {isTabsSticky && <div style={{ height: `${tabsRef.current?.offsetHeight || 50}px` }} />}
+
+        <div className="container mx-auto px-4 py-6">
           {activeTab === 'products' && (
             <ProductsTab
               products={products}
