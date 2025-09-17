@@ -54,6 +54,7 @@ const ProfileImage: React.FC<{
   const sizeClasses = {
     sm: 'w-8 h-8 text-xs',
     md: 'w-16 h-16 text-lg',
+    xl: 'w-16 h-16 text-lg',
     lg: 'w-24 h-24 text-xl'
   };
 
