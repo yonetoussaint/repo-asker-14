@@ -384,17 +384,26 @@ const SellerPage: React.FC = () => {
 
   // Scroll handling effect for sticky tabs
   useEffect(() => {
+    let tabsOriginalOffsetTop = 0;
+
     const handleScroll = () => {
       if (!headerRef.current || !tabsRef.current) return;
 
       const scrollY = window.scrollY;
-      const tabsElement = tabsRef.current;
-      const tabsOffsetTop = tabsElement.offsetTop;
       const headerHeight = headerRef.current.offsetHeight;
 
-      // Make tabs sticky when user scrolls past the tabs original position
-      // minus the header height (so tabs stick right below the header)
-      setIsTabsSticky(scrollY >= (tabsOffsetTop - headerHeight));
+      // Calculate the original position of tabs when not sticky
+      if (!isTabsSticky && tabsOriginalOffsetTop === 0) {
+        tabsOriginalOffsetTop = tabsRef.current.getBoundingClientRect().top + scrollY;
+      }
+
+      // Make tabs sticky when scrolling past their original position minus header height
+      // Return to normal flow when scrolling back above that point
+      const shouldBeSticky = scrollY >= (tabsOriginalOffsetTop - headerHeight);
+      
+      if (shouldBeSticky !== isTabsSticky) {
+        setIsTabsSticky(shouldBeSticky);
+      }
     };
 
     // Add a small delay to ensure elements are rendered
@@ -407,7 +416,7 @@ const SellerPage: React.FC = () => {
       clearTimeout(timeoutId);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [activeTab, seller]);
+  }, [activeTab, seller, isTabsSticky]);
 
   // Action handlers
   const handleFollow = () => {
@@ -466,7 +475,7 @@ const SellerPage: React.FC = () => {
 
         <nav 
           ref={tabsRef}
-          className={`bg-white border-b transition-all duration-200 ${
+          className={`bg-white border-b transition-all duration-300 ${
             isTabsSticky 
               ? 'fixed top-0 left-0 right-0 z-40 shadow-lg' 
               : 'relative'
