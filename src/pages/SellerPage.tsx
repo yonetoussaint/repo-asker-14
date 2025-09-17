@@ -185,15 +185,13 @@ const SellerInfoSection: React.FC<{
           {/* Right sidebar with profile picture and stats */}
           <div className="flex lg:flex-col gap-4 lg:w-48">
             {/* Profile Picture - same height as cards */}
-            <div className="flex-1 flex justify-center items-center">
-              <ProfileImage
-                src={seller.profile_image}
-                name={seller.name}
-                size="xl"
-                showOnlineStatus={true}
-                isOnline={onlineStatus?.isOnline || false}
-              />
-            </div>
+            <ProfileImage
+              src={seller.profile_image}
+              name={seller.name}
+              size="card"
+              showOnlineStatus={true}
+              isOnline={onlineStatus?.isOnline || false}
+            />
 
             <div className="flex-1 bg-gray-50 rounded-lg p-3 text-center h-16 flex flex-col justify-center">
               <div className="text-lg font-bold text-gray-900">{seller.trust_score}/100</div>
