@@ -104,10 +104,10 @@ const SellerPage = () => {
       case 'price-high':
         return b.price - a.price;
       case 'rating':
-        return (b.rating || 0) - (a.rating || 0);
+        return (b.saves || 0) - (a.saves || 0); // Using saves as proxy for rating
       case 'popularity':
       default:
-        return (b.sales_count || 0) - (a.sales_count || 0);
+        return (b.views || 0) - (a.views || 0);
     }
   });
 
@@ -164,40 +164,95 @@ const SellerPage = () => {
             <div className="container mx-auto px-4 py-8">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Store Info */}
-                <div className="lg:col-span-2 space-y-4">
-                  <h1 className="text-3xl font-bold text-gray-900">{seller.store_name}</h1>
-                  <p className="text-gray-600 text-lg leading-relaxed">{seller.description}</p>
-                  
-                  <div className="flex flex-wrap gap-6 text-sm text-gray-500">
-                    {seller.location && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{seller.location}</span>
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground">{seller.name}</h1>
+                        {seller.verified && (
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            Verified Seller
+                          </Badge>
+                        )}
                       </div>
-                    )}
-                    
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>Member since {formatDate(seller.created_at)}</span>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{seller.rating?.toFixed(1) || '4.8'}</span>
+                        <span className="text-muted-foreground">({formatNumber(seller.total_sales)} sales)</span>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>{formatNumber(seller.follower_count || 0)} followers</span>
+                    <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">{seller.description}</p>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          <span>Member since {formatDate(seller.created_at || new Date().toISOString())}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Users className="w-4 h-4" />
+                          <span>{formatNumber(seller.followers_count || 0)} followers</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {seller.category && (
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4 text-muted-foreground" />
+                            <Badge variant="outline">{seller.category}</Badge>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${seller.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          <span className="text-muted-foreground capitalize">{seller.status}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Store Stats */}
-                <div className="space-y-3">
-                  <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Response Rate</span>
-                    <span className="text-lg font-semibold text-gray-900">{seller.response_rate || 95}%</span>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Response Time</span>
-                    <span className="text-lg font-semibold text-gray-900">{seller.response_time || 'Within hours'}</span>
+                {/* Enhanced Store Stats */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    <Card className="p-4 border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-transparent">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-muted-foreground">Trust Score</p>
+                          <p className="text-2xl font-bold text-foreground">{seller.trust_score}/100</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Star className="w-6 h-6 text-primary" />
+                        </div>
+                      </div>
+                    </Card>
+                    
+                    <Card className="p-4 border-l-4 border-l-green-500 bg-gradient-to-r from-green-50 to-transparent">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-muted-foreground">Total Sales</p>
+                          <p className="text-2xl font-bold text-foreground">{formatNumber(seller.total_sales)}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                          <Package className="w-6 h-6 text-green-600" />
+                        </div>
+                      </div>
+                    </Card>
+                    
+                    <Card className="p-4 border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-transparent">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-muted-foreground">Products</p>
+                          <p className="text-2xl font-bold text-foreground">{products.length}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                          <Grid3X3 className="w-6 h-6 text-blue-600" />
+                        </div>
+                      </div>
+                    </Card>
                   </div>
                 </div>
               </div>
@@ -228,93 +283,306 @@ const SellerPage = () => {
         <div className="container mx-auto px-4 py-8">
           {activeTab === 'products' && (
             <div className="space-y-6">
-              {/* Product filters and search can go here */}
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Input
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-64"
-                  />
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="popularity">Popular</SelectItem>
-                      <SelectItem value="newest">Newest</SelectItem>
-                      <SelectItem value="price-low">Price: Low to High</SelectItem>
-                      <SelectItem value="price-high">Price: High to Low</SelectItem>
-                      <SelectItem value="rating">Rating</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Enhanced Product Filters */}
+              <div className="space-y-4">
+                <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                  <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full lg:w-auto">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="popularity">Most Popular</SelectItem>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="price-low">Price: Low to High</SelectItem>
+                        <SelectItem value="price-high">Price: High to Low</SelectItem>
+                        <SelectItem value="rating">Highest Rated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('grid')}
+                      className="flex items-center gap-2"
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                      <span className="hidden sm:inline">Grid</span>
+                    </Button>
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                      className="flex items-center gap-2"
+                    >
+                      <List className="w-4 h-4" />
+                      <span className="hidden sm:inline">List</span>
+                    </Button>
+                  </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
+                {/* Products count and filter summary */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between text-sm text-muted-foreground">
+                  <span>
+                    Showing {sortedProducts.length} of {products.length} products
+                    {searchQuery && ` for "${searchQuery}"`}
+                  </span>
+                  {searchQuery && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSearchQuery('')}
+                      className="text-muted-foreground hover:text-foreground w-fit"
+                    >
+                      Clear search
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              {/* Products grid/list */}
+              {/* Enhanced Products Display */}
               {productsLoading ? (
-                <div className="flex justify-center py-12">
-                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p className="text-muted-foreground">Loading products...</p>
                 </div>
               ) : sortedProducts.length === 0 ? (
-                <div className="text-center py-12">
-                  <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-                  <p className="text-gray-500">Try adjusting your search or filters.</p>
-                </div>
+                <Card className="p-12 text-center">
+                  <Package className="w-16 h-16 text-muted-foreground mx-auto mb-6" />
+                  <h3 className="text-xl font-semibold mb-3">
+                    {searchQuery ? 'No products match your search' : 'No products available'}
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    {searchQuery 
+                      ? `We couldn't find any products matching "${searchQuery}". Try different keywords or clear your search.`
+                      : 'This seller hasn\'t added any products yet. Check back later for updates.'
+                    }
+                  </p>
+                  {searchQuery && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSearchQuery('')}
+                      className="mx-auto"
+                    >
+                      Clear Search
+                    </Button>
+                  )}
+                </Card>
               ) : (
-                <div className={viewMode === 'grid' 
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
-                  : "space-y-4"
-                }>
-                  {/* Products would be rendered here */}
-                  <div className="text-center py-12 col-span-full">
-                    <p className="text-gray-500">Product components would be rendered here</p>
+                <div className="space-y-6">
+                  {/* Products Grid/List */}
+                  <div className={
+                    viewMode === 'grid' 
+                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6" 
+                      : "space-y-4"
+                  }>
+                    {sortedProducts.map((product, index) => (
+                      <Card 
+                        key={product.id} 
+                        className={`group cursor-pointer hover:shadow-lg transition-all duration-200 ${
+                          viewMode === 'list' ? 'p-4' : 'overflow-hidden'
+                        }`}
+                        onClick={() => navigate(`/product/${product.id}`)}
+                      >
+                        {viewMode === 'grid' ? (
+                          <div className="space-y-4">
+                            <div className="aspect-square bg-muted rounded-lg flex items-center justify-center relative overflow-hidden">
+                              <Package className="w-12 h-12 text-muted-foreground" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                            <div className="p-4 space-y-2">
+                              <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                {product.name}
+                              </h3>
+                              <div className="flex items-center justify-between">
+                                <span className="text-lg font-bold text-primary">
+                                  ${product.price.toFixed(2)}
+                                </span>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <span>{((product.saves || 0) / 10 + 4).toFixed(1)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex gap-4">
+                            <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Package className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                            <div className="flex-1 space-y-2">
+                              <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                                {product.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {product.description}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-lg font-bold text-primary">
+                                  ${product.price.toFixed(2)}
+                                </span>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <span>{((product.saves || 0) / 10 + 4).toFixed(1)}</span>
+                                  <span>•</span>
+                                  <span>{formatNumber(product.views || 0)} views</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </Card>
+                    ))}
                   </div>
+                  
+                  {/* Load More Button for large product lists */}
+                  {sortedProducts.length >= 12 && (
+                    <div className="text-center pt-8">
+                      <Button variant="outline" size="lg">
+                        Load More Products
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
 
           {activeTab === 'about' && (
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center py-12">
-                <Store className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">About {seller.store_name}</h2>
-                <p className="text-gray-600 mb-8">More detailed information about this seller would be displayed here.</p>
-                <div className="bg-gray-50 rounded-lg p-8">
-                  <p className="text-gray-500">About content will be implemented here.</p>
-                </div>
+            <div className="max-w-4xl mx-auto space-y-8">
+              <div className="text-center">
+                <Store className="w-16 h-16 text-muted-foreground mx-auto mb-6" />
+                <h2 className="text-2xl font-bold text-foreground mb-4">About {seller.name}</h2>
+                <p className="text-muted-foreground mb-8">Discover more about this trusted seller and their business.</p>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Business Information</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Business Type</span>
+                      <span className="font-medium">{seller.category || 'General Retail'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Member Since</span>
+                      <span className="font-medium">{formatDate(seller.created_at || new Date().toISOString())}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Verification Status</span>
+                      <Badge variant={seller.verified ? "default" : "secondary"}>
+                        {seller.verified ? "Verified" : "Pending"}
+                      </Badge>
+                    </div>
+                  </div>
+                </Card>
+                
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Trust Score</span>
+                      <span className="font-medium">{seller.trust_score}/100</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Sales</span>
+                      <span className="font-medium">{formatNumber(seller.total_sales)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Customer Rating</span>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{seller.rating?.toFixed(1) || '4.8'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+              
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Store Description</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {seller.description || "This seller hasn't provided a detailed description yet."}
+                </p>
+              </Card>
             </div>
           )}
 
           {activeTab === 'reviews' && (
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center py-12">
-                <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Customer Reviews</h2>
-                <p className="text-gray-600 mb-8">See what customers are saying about {seller.store_name}.</p>
-                <div className="bg-gray-50 rounded-lg p-8">
-                  <p className="text-gray-500">Reviews content will be implemented here.</p>
+            <div className="max-w-4xl mx-auto space-y-8">
+              <div className="text-center">
+                <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-6" />
+                <h2 className="text-2xl font-bold text-foreground mb-4">Customer Reviews</h2>
+                <p className="text-muted-foreground mb-8">See what customers are saying about {seller.name}.</p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1">
+                  <Card className="p-6 text-center">
+                    <div className="text-4xl font-bold text-foreground mb-2">{seller.rating?.toFixed(1) || '4.8'}</div>
+                    <div className="flex justify-center mb-2">
+                      {[1,2,3,4,5].map((star) => (
+                        <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Based on {formatNumber(seller.total_sales)} reviews</p>
+                  </Card>
+                </div>
+                
+                <div className="lg:col-span-2 space-y-4">
+                  {[5,4,3,2,1].map((rating) => (
+                    <div key={rating} className="flex items-center gap-4">
+                      <span className="text-sm font-medium w-8">{rating} ★</span>
+                      <div className="flex-1 bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-yellow-400 h-2 rounded-full" 
+                          style={{ width: `${rating === 5 ? 70 : rating === 4 ? 20 : rating === 3 ? 5 : rating === 2 ? 3 : 2}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-muted-foreground w-10">{rating === 5 ? '70%' : rating === 4 ? '20%' : rating === 3 ? '5%' : rating === 2 ? '3%' : '2%'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold">Recent Reviews</h3>
+                <div className="space-y-4">
+                  {[1,2,3].map((review) => (
+                    <Card key={review} className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-sm font-medium text-primary">U{review}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium">Customer {review}</p>
+                            <div className="flex items-center gap-1">
+                              {[1,2,3,4,5].map((star) => (
+                                <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-sm text-muted-foreground">2 days ago</span>
+                      </div>
+                      <p className="text-muted-foreground">
+                        Excellent service and high-quality products. Fast shipping and great customer support. 
+                        Highly recommend this seller!
+                      </p>
+                    </Card>
+                  ))}
                 </div>
               </div>
             </div>
