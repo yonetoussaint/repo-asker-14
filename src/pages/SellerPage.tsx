@@ -573,6 +573,102 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
   );
 };
 
+// Categories Tab Component  
+const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
+  // Mock categories data - in a real app this would come from your database
+  const mockCategories = [
+    {
+      id: '1',
+      name: 'Electronics',
+      description: 'Phones, laptops, and gadgets',
+      image_url: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=300&fit=crop',
+      product_count: 24,
+      created_at: '2024-01-15T00:00:00Z'
+    },
+    {
+      id: '2', 
+      name: 'Fashion',
+      description: 'Clothing, shoes, and accessories',
+      image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop',
+      product_count: 15,
+      created_at: '2024-01-10T00:00:00Z'
+    },
+    {
+      id: '3',
+      name: 'Home & Garden',
+      description: 'Furniture, decor, and outdoor items',
+      image_url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+      product_count: 18,
+      created_at: '2024-01-05T00:00:00Z'
+    },
+    {
+      id: '4',
+      name: 'Sports & Fitness',
+      description: 'Equipment, apparel, and accessories',
+      image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
+      product_count: 12,
+      created_at: '2024-01-01T00:00:00Z'
+    }
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Shop by Category</h2>
+        <span className="text-sm text-muted-foreground">{mockCategories.length} categories</span>
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {mockCategories.map((category) => (
+          <Card key={category.id} className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden border-0 shadow-sm">
+            <div className="aspect-[4/3] overflow-hidden">
+              <img 
+                src={category.image_url} 
+                alt={category.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            <div className="p-4">
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="font-medium text-base group-hover:text-primary transition-colors">
+                  {category.name}
+                </h3>
+                <Badge variant="secondary" className="text-xs">
+                  {category.product_count}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                {category.description}
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(category.created_at)}
+                </span>
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                  View Products
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+      
+      <Card className="p-6 bg-muted/20">
+        <div className="text-center">
+          <Package className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+          <h3 className="font-medium mb-2">Custom Categories</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            This seller has organized their products into custom categories for easier browsing.
+          </p>
+          <Button variant="outline" size="sm">
+            Browse All Products
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
 // Main SellerPage Component
 const SellerPage: React.FC = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
@@ -692,6 +788,7 @@ const SellerPage: React.FC = () => {
   const headerHeight = headerRef.current?.offsetHeight || 0;
   const tabs = [
     { id: 'products', label: 'Products' },
+    { id: 'categories', label: 'Categories' },
     { id: 'reels', label: 'Reels' },
     { id: 'about', label: 'About' },
     { id: 'reviews', label: 'Reviews' },
@@ -744,13 +841,11 @@ const SellerPage: React.FC = () => {
           }`}
           style={isTabsSticky ? { top: `${headerHeight}px` } : undefined}
         >
-          <div className="container mx-auto">
-            <TabsNavigation
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
-          </div>
+          <TabsNavigation
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </nav>
 
         {/* Spacer div when tabs are sticky to prevent content jumping */}
@@ -765,6 +860,10 @@ const SellerPage: React.FC = () => {
               setSearchQuery={setSearchQuery}
               navigate={navigate}
             />
+          )}
+
+          {activeTab === 'categories' && (
+            <CategoriesTab sellerId={sellerId} />
           )}
 
           {activeTab === 'reels' && (
