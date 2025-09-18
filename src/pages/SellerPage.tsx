@@ -637,12 +637,13 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
                   <Play className="w-8 h-8 text-muted-foreground" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                <Play className="w-8 h-8 text-white opacity-80" />
-              </div>
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
               <div className="absolute bottom-2 left-2 right-2">
                 <div className="flex items-center justify-between text-white text-xs">
-                  <span>{reel.views || 0} views</span>
+                  <div className="flex items-center gap-1">
+                    <Play className="w-3 h-3" />
+                    <span>{reel.views || 0}</span>
+                  </div>
                   <span>{reel.likes || 0} likes</span>
                 </div>
               </div>
