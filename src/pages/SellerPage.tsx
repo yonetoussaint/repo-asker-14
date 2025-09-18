@@ -1035,11 +1035,13 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
 };
 
 // Main SellerPage Component
+              // Main SellerPage Component
 const SellerPage: React.FC = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
   const navigate = useNavigate();
   const headerRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const mainContentRef = useRef<HTMLDivElement>(null);
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
@@ -1145,22 +1147,12 @@ const SellerPage: React.FC = () => {
     toast.info("Message feature coming soon");
   };
 
-  // Tab change handler with scroll reset
+  // Fixed tab change handler with proper scroll reset
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
-    // Reset scroll position to top of tab content
-    setTimeout(() => {
-      const tabContentElement = document.querySelector('.tab-content-container');
-      if (tabContentElement) {
-        tabContentElement.scrollTop = 0;
-      }
-      // Also scroll the main window to the tabs area
-      if (tabsRef.current) {
-        const headerHeight = headerRef.current?.offsetHeight || 0;
-        const tabsPosition = tabsRef.current.getBoundingClientRect().top + window.scrollY - headerHeight;
-        window.scrollTo({ top: tabsPosition, behavior: 'smooth' });
-      }
-    }, 50);
+    
+    // Reset scroll to top of page when changing tabs
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Loading state
@@ -1180,7 +1172,7 @@ const SellerPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-        <header 
+      <header 
         ref={headerRef}
         className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm"
       >
@@ -1235,9 +1227,9 @@ const SellerPage: React.FC = () => {
         {isTabsSticky && <div style={{ height: `${tabsRef.current?.offsetHeight || 50}px` }} />}
 
         <div 
-  key={activeTab} // This forces React to recreate the container on tab change
-  className="container mx-auto px-4 py-6 tab-content-container"
->
+          ref={mainContentRef}
+          className="container mx-auto px-4 py-6 tab-content-container"
+        >
           {activeTab === 'products' && (
             <ProductsTab
               products={products}
@@ -1273,4 +1265,4 @@ const SellerPage: React.FC = () => {
   );
 };
 
-export default SellerPage;
+export default SellerPage
