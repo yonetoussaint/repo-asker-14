@@ -635,8 +635,8 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   }
 
   return (
-    <div className="w-full mx-[-16px] sm:mx-[-24px] px-0">
-      <div className="grid grid-cols-3 gap-px w-full">
+    <div className="mx-[-1rem] sm:mx-[-1.5rem]">
+      <div className="grid grid-cols-3 gap-px">
         {reels.map((reel) => (
           <div key={reel.id} className="group cursor-pointer overflow-hidden">
             <div className="aspect-[3/4] bg-muted relative">
