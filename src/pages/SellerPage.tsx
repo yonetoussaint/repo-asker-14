@@ -601,6 +601,20 @@ const ReviewsTab: React.FC<{ seller: Seller }> = ({ seller }) => {
 const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   const { data: reels = [], isLoading } = useSellerReels(sellerId);
 
+  // Function to format numbers to K/M/B
+  const formatCount = (count) => {
+    if (count >= 1000000000) {
+      return (count / 1000000000).toFixed(1) + 'B';
+    }
+    if (count >= 1000000) {
+      return (count / 1000000).toFixed(1) + 'M';
+    }
+    if (count >= 1000) {
+      return (count / 1000).toFixed(1) + 'K';
+    }
+    return count;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -638,13 +652,10 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
                 </div>
               )}
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
-              <div className="absolute bottom-2 left-2 right-2">
-                <div className="flex items-center justify-between text-white text-xs">
-                  <div className="flex items-center gap-1">
-                    <Play className="w-3 h-3" />
-                    <span>{reel.views || 0}</span>
-                  </div>
-                  <span>{reel.likes || 0} likes</span>
+              <div className="absolute bottom-2 left-2">
+                <div className="flex items-center gap-1 text-white text-xs">
+                  <Play className="w-3 h-3" />
+                  <span>{formatCount(reel.views || 0)}</span>
                 </div>
               </div>
             </div>
