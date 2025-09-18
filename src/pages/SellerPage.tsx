@@ -1034,274 +1034,254 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   );
 };
 
-// Main SellerPage Component
-const SellerPage: React.FC = () => {
-  const { sellerId } = useParams<{ sellerId: string }>();
-  const navigate = useNavigate();
-  const headerRef = useRef<HTMLDivElement>(null);
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const mainContentRef = useRef<HTMLDivElement>(null);
-
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [activeTab, setActiveTab] = useState('products');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isTabsSticky, setIsTabsSticky] = useState(false);
-
-  // Online status state - you would get this from your real-time data source
-  const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({
-    isOnline: true, // This would come from your WebSocket or polling
-    lastSeen: "2025-09-17T10:30:00Z" // ISO string from your backend
-  });
-
-  // Handle case where sellerId is not provided
-  if (!sellerId) {
-    return <ErrorMessage message="Seller ID is required" />;
-  }
-
-  // Hooks with error handling
-  const { data: seller, isLoading: sellerLoading, error: sellerError } = useSeller(sellerId);
-  const { data: products = [], isLoading: productsLoading, error: productsError } = useSellerProducts(sellerId);
-
-  // Error handling
-  if (sellerError) {
-    return <ErrorMessage message="Failed to load seller information" />;
-  }
-
-  if (productsError) {
-    return <ErrorMessage message="Failed to load products" />;
-  }
-
-  // Scroll handling effect for sticky tabs
-  useEffect(() => {
-    let tabsOriginalOffsetTop = 0;
-    let rafId: number;
-
-    const calculateOriginalPosition = () => {
-      if (!headerRef.current || !tabsRef.current) return;
-
-      const headerHeight = headerRef.current.offsetHeight;
+// Main SellerPage Component  
+const SellerPage: React.FC = () => {  
+  const { sellerId } = useParams<{ sellerId: string }>();  
+  const navigate = useNavigate();  
+  const headerRef = useRef<HTMLDivElement>(null);  
+  const tabsRef = useRef<HTMLDivElement>(null);  
+  const mainContentRef = useRef<HTMLDivElement>(null);  
+  const sellerInfoRef = useRef<HTMLDivElement>(null);
+  
+  const [isFollowing, setIsFollowing] = useState(false);  
+  const [activeTab, setActiveTab] = useState('products');  
+  const [searchQuery, setSearchQuery] = useState('');  
+  const [isTabsSticky, setIsTabsSticky] = useState(false);  
+  const [tabsHeight, setTabsHeight] = useState(0);
+  
+  // Online status state - you would get this from your real-time data source  
+  const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({  
+    isOnline: true, // This would come from your WebSocket or polling  
+    lastSeen: "2025-09-17T10:30:00Z" // ISO string from your backend  
+  });  
+  
+  // Add this useEffect to scroll to top on tab change  
+  useEffect(() => {  
+    // Scroll to top when tab changes  
+    window.scrollTo({  
+      top: 0,  
+      behavior: 'smooth' // or 'auto' for instant scroll  
+    });  
+  }, [activeTab]);  
+  
+  // Handle case where sellerId is not provided  
+  if (!sellerId) {  
+    return <ErrorMessage message="Seller ID is required" />;  
+  }  
+  
+  // Hooks with error handling  
+  const { data: seller, isLoading: sellerLoading, error: sellerError } = useSeller(sellerId);  
+  const { data: products = [], isLoading: productsLoading, error: productsError } = useSellerProducts(sellerId);  
+  
+  // Error handling  
+  if (sellerError) {  
+    return <ErrorMessage message="Failed to load seller information" />;  
+  }  
+  
+  if (productsError) {  
+    return <ErrorMessage message="Failed to load products" />;  
+  }  
+  
+  // Improved scroll handling effect for sticky tabs  
+  useEffect(() => {  
+    const handleScroll = () => {  
+      if (!headerRef.current || !tabsRef.current) return;  
+  
+      const scrollY = window.scrollY;  
+      const headerHeight = headerRef.current.offsetHeight;  
       
-      // For products tab, include the SellerInfoSection height
-      if (activeTab === 'products') {
-        const sellerInfoSection = document.querySelector('.seller-info-section');
-        const sellerInfoHeight = sellerInfoSection?.clientHeight || 200;
-        tabsOriginalOffsetTop = headerHeight + sellerInfoHeight;
-      } else {
-        // For other tabs, tabs start right after header
-        tabsOriginalOffsetTop = headerHeight;
+      // Get the tabs element's original position in the document
+      const tabsRect = tabsRef.current.getBoundingClientRect();
+      const tabsOffsetTop = scrollY + tabsRect.top;
+      
+      // Calculate when tabs should become sticky
+      // This should happen when the tabs would normally scroll past the bottom of the header
+      const stickyThreshold = tabsOffsetTop - headerHeight;
+      
+      // Store tabs height for spacer
+      if (tabsRef.current.offsetHeight !== tabsHeight) {
+        setTabsHeight(tabsRef.current.offsetHeight);
       }
-    };
-
-    const handleScroll = () => {
-      if (!headerRef.current || !tabsRef.current) return;
-
-      const scrollY = window.scrollY;
-      const headerHeight = headerRef.current.offsetHeight;
-
-      // Calculate original position
-      calculateOriginalPosition();
-
+      
       // Determine if tabs should be sticky
-      const shouldBeSticky = scrollY > (tabsOriginalOffsetTop - headerHeight);
-
-      setIsTabsSticky(shouldBeSticky);
-    };
-
-    const optimizedScrollHandler = () => {
-      if (rafId) cancelAnimationFrame(rafId);
+      const shouldBeSticky = scrollY >= stickyThreshold;
+      
+      // Only update state if it changed to prevent unnecessary re-renders
+      if (shouldBeSticky !== isTabsSticky) {
+        setIsTabsSticky(shouldBeSticky);
+      }
+    };  
+  
+    // Use RAF for smoother scrolling performance
+    let rafId: number;
+    const throttledHandleScroll = () => {
+      cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(handleScroll);
     };
-
-    // Recalculate when tab changes or data loads
+    
+    // Initial calculation after a short delay to ensure all elements are rendered
     const timeoutId = setTimeout(() => {
-      calculateOriginalPosition();
-      window.addEventListener('scroll', optimizedScrollHandler, { passive: true });
-      handleScroll(); // Call once to set initial state
-    }, 100);
-
-    return () => {
+      handleScroll(); // Set initial state
+      window.addEventListener('scroll', throttledHandleScroll, { passive: true });
+    }, 100);  
+  
+    return () => {  
       clearTimeout(timeoutId);
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', optimizedScrollHandler);
-    };
-  }, [activeTab, seller]);
-
-  // Scroll to top effect - delayed to ensure DOM is updated
-  useEffect(() => {
-    const scrollTimeout = setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-      
-      // Recalculate sticky position after scroll completes
-      const recalcTimeout = setTimeout(() => {
-        setIsTabsSticky(false); // Reset sticky state temporarily
-        // Force re-layout to ensure proper calculation
-        if (tabsRef.current) {
-          tabsRef.current.style.display = 'none';
-          tabsRef.current.offsetHeight; // Trigger reflow
-          tabsRef.current.style.display = '';
-        }
-      }, 500); // Match the scroll duration
-
-      return () => clearTimeout(recalcTimeout);
-    }, 50); // Small delay to ensure DOM updates
-
-    return () => clearTimeout(scrollTimeout);
-  }, [activeTab]);
-
-  // Example effect to simulate real-time online status updates
-  useEffect(() => {
-    // This is where you'd set up your WebSocket connection or polling
-    // For demo purposes, we'll simulate status changes
-    const interval = setInterval(() => {
-      // Randomly toggle online status for demo
-      setOnlineStatus(prev => ({
-        isOnline: Math.random() > 0.3, // 70% chance of being online
-        lastSeen: prev.isOnline ? new Date().toISOString() : prev.lastSeen
-      }));
-    }, 30000); // Update every 30 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Action handlers
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing);
-    toast.success(isFollowing ? "Unfollowed" : "Following");
-  };
-
-  const handleMessage = () => {
-    toast.info("Message feature coming soon");
-  };
-
-  // Tab change handler
-  const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab);
-  };
-
-  // Loading state
-  if (sellerLoading || !seller) {
-    return <LoadingSpinner />;
-  }
-
-  const headerHeight = headerRef.current?.offsetHeight || 0;
-  const tabs = [
-    { id: 'products', label: 'Products' },
-    { id: 'categories', label: 'Categories' },
-    { id: 'reels', label: 'Reels' },
-    { id: 'about', label: 'About' },
-    { id: 'reviews', label: 'Reviews' },
-    { id: 'contact', label: 'Contact' },
-  ];
-
-  return (
-    <div className="min-h-screen bg-white">
-      <header 
-        ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm"
-      >
-        <SellerHeader
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          isFollowing={isFollowing}
-          onFollow={handleFollow}
-          onMessage={handleMessage}
-          actionButtons={[
-            {
-              Icon: Heart,
-              active: isFollowing,
-              onClick: handleFollow,
-              activeColor: "#f43f5e"
-            },
-            {
-              Icon: MessageCircle,
-              onClick: handleMessage
-            }
-          ]}
-          forceScrolledState={true}
-        />
-      </header>
-
-      <main style={{ paddingTop: headerHeight }}>
-        {activeTab === 'products' && (
-          <SellerInfoSection 
-            seller={seller} 
-            products={products} 
-            onlineStatus={onlineStatus}
-            className="seller-info-section"
-          />
-        )}
-
-        <nav 
-          ref={tabsRef}
-          className={`bg-white border-b transition-all duration-300 ${
-            isTabsSticky 
-              ? 'fixed top-0 left-0 right-0 z-40 shadow-md' 
-              : 'relative'
-          }`}
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', throttledHandleScroll);  
+    };  
+  }, [activeTab, seller, isTabsSticky, tabsHeight]); // Include dependencies
+  
+  // Example effect to simulate real-time online status updates  
+  useEffect(() => {  
+    // This is where you'd set up your WebSocket connection or polling  
+    // For demo purposes, we'll simulate status changes  
+    const interval = setInterval(() => {  
+      // Randomly toggle online status for demo  
+      setOnlineStatus(prev => ({  
+        isOnline: Math.random() > 0.3, // 70% chance of being online  
+        lastSeen: prev.isOnline ? new Date().toISOString() : prev.lastSeen  
+      }));  
+    }, 30000); // Update every 30 seconds  
+  
+    return () => clearInterval(interval);  
+  }, []);  
+  
+  // Action handlers  
+  const handleFollow = () => {  
+    setIsFollowing(!isFollowing);  
+    toast.success(isFollowing ? "Unfollowed" : "Following");  
+  };  
+  
+  const handleMessage = () => {  
+    toast.info("Message feature coming soon");  
+  };  
+  
+  // Fixed tab change handler - no scrolling, just reset tab state  
+  const handleTabChange = (newTab: string) => {  
+    setActiveTab(newTab);  
+    // Reset sticky state when changing tabs to recalculate positions
+    setIsTabsSticky(false);
+  };  
+  
+  // Loading state  
+  if (sellerLoading || !seller) {  
+    return <LoadingSpinner />;  
+  }  
+  
+  const headerHeight = headerRef.current?.offsetHeight || 0;  
+  const tabs = [  
+    { id: 'products', label: 'Products' },  
+    { id: 'categories', label: 'Categories' },  
+    { id: 'reels', label: 'Reels' },  
+    { id: 'about', label: 'About' },  
+    { id: 'reviews', label: 'Reviews' },  
+    { id: 'contact', label: 'Contact' },  
+  ];  
+  
+  return (  
+    <div className="min-h-screen bg-white">  
+      <header   
+        ref={headerRef}  
+        className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm"  
+      >  
+        <SellerHeader  
+          activeTab={activeTab}  
+          onTabChange={handleTabChange}  
+          isFollowing={isFollowing}  
+          onFollow={handleFollow}  
+          onMessage={handleMessage}  
+          actionButtons={[  
+            {  
+              Icon: Heart,  
+              active: isFollowing,  
+              onClick: handleFollow,  
+              activeColor: "#f43f5e"  
+            },  
+            {  
+              Icon: MessageCircle,  
+              onClick: handleMessage  
+            }  
+          ]}  
+          forceScrolledState={true}  
+        />  
+      </header>  
+  
+      <main style={{ paddingTop: headerHeight }}>  
+        {activeTab === 'products' && (  
+          <div ref={sellerInfoRef}>
+            <SellerInfoSection   
+              seller={seller}   
+              products={products}   
+              onlineStatus={onlineStatus}  
+            />  
+          </div>
+        )}  
+  
+        <nav   
+          ref={tabsRef}  
+          className={`bg-white border-b transition-all duration-200 ease-out ${  
+            isTabsSticky   
+              ? 'fixed top-0 left-0 right-0 z-40 shadow-sm'   
+              : 'relative'  
+          }`}  
           style={isTabsSticky ? { 
             top: `${headerHeight}px`,
-            transition: 'all 0.3s ease-in-out'
-          } : {
-            transition: 'all 0.3s ease-in-out'
-          }}
-        >
-          <TabsNavigation
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </nav>
-
-        {/* Spacer div when tabs are sticky to prevent content jumping */}
+            transform: isTabsSticky ? 'translateZ(0)' : 'none' // GPU acceleration for smoother animation
+          } : undefined}  
+        >  
+          <TabsNavigation  
+            tabs={tabs}  
+            activeTab={activeTab}  
+            onTabChange={handleTabChange}  
+          />  
+        </nav>  
+  
+        {/* Spacer div when tabs are sticky to prevent content jumping */}  
         {isTabsSticky && (
           <div 
-            style={{ 
-              height: `${tabsRef.current?.offsetHeight || 50}px`,
-              transition: 'height 0.3s ease-in-out'
-            }} 
+            className="transition-all duration-200 ease-out"
+            style={{ height: `${tabsHeight}px` }} 
           />
         )}
-
-        <div 
-          ref={mainContentRef}
-          className="container mx-auto px-4 py-6 tab-content-container"
-        >
-          {activeTab === 'products' && (
-            <ProductsTab
-              products={products}
-              isLoading={productsLoading}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              navigate={navigate}
-            />
-          )}
-
-          {activeTab === 'categories' && (
-            <CategoriesTab sellerId={sellerId} />
-          )}
-
-          {activeTab === 'reels' && (
-            <ReelsTab sellerId={sellerId} />
-          )}
-
-          {activeTab === 'about' && (
-            <AboutTab seller={seller} />
-          )}
-
-          {activeTab === 'reviews' && (
-            <CustomerReviewsEnhanced productId={sellerId} limit={10} />
-          )}
-
-          {activeTab === 'contact' && (
-            <ContactTab seller={seller} />
-          )}
-        </div>
-      </main>
-    </div>
-  );
+  
+        <div   
+          ref={mainContentRef}  
+          className="container mx-auto px-4 py-6 tab-content-container"  
+        >  
+          {activeTab === 'products' && (  
+            <ProductsTab  
+              products={products}  
+              isLoading={productsLoading}  
+              searchQuery={searchQuery}  
+              setSearchQuery={setSearchQuery}  
+              navigate={navigate}  
+            />  
+          )}  
+  
+          {activeTab === 'categories' && (  
+            <CategoriesTab sellerId={sellerId} />  
+          )}  
+  
+          {activeTab === 'reels' && (  
+            <ReelsTab sellerId={sellerId} />  
+          )}  
+  
+          {activeTab === 'about' && (  
+            <AboutTab seller={seller} />  
+          )}  
+  
+          {activeTab === 'reviews' && (  
+            <CustomerReviewsEnhanced productId={sellerId} limit={10} />  
+          )}  
+  
+          {activeTab === 'contact' && (  
+            <ContactTab seller={seller} />  
+          )}  
+        </div>  
+      </main>  
+    </div>  
+  );  
 };
 
 export default SellerPage
