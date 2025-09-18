@@ -1234,7 +1234,10 @@ const SellerPage: React.FC = () => {
         {/* Spacer div when tabs are sticky to prevent content jumping */}
         {isTabsSticky && <div style={{ height: `${tabsRef.current?.offsetHeight || 50}px` }} />}
 
-        <div className="container mx-auto px-4 py-6 tab-content-container">
+        <div 
+  key={activeTab} // This forces React to recreate the container on tab change
+  className="container mx-auto px-4 py-6 tab-content-container"
+>
           {activeTab === 'products' && (
             <ProductsTab
               products={products}
