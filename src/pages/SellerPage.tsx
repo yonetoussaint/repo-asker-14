@@ -634,10 +634,10 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+    <div className="w-full">
+      <div className="grid grid-cols-3 gap-px">
         {reels.map((reel) => (
-          <Card key={reel.id} className="group cursor-pointer overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all duration-200">
+          <div key={reel.id} className="group cursor-pointer overflow-hidden">
             <div className="aspect-[9/16] bg-muted relative">
               {reel.video_url ? (
                 <video 
@@ -659,7 +659,7 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     </div>
