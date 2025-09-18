@@ -598,7 +598,7 @@ const ReviewsTab: React.FC<{ seller: Seller }> = ({ seller }) => {
 };
 
 // Reels Tab Component
-// Reels Tab Component - Fixed Version with All Edges Flush
+// Reels Tab Component - Fixed to start directly after tabs navigation
 const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   const { data: reels = [], isLoading } = useSellerReels(sellerId);
 
@@ -635,7 +635,7 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   }
 
   return (
-    <div className="mx-[-1rem] sm:mx-[-1.5rem] mt-[-1rem] sm:mt-[-1.5rem] mb-[-1rem] sm:mb-[-1.5rem]">
+    <div className="mx-[-1rem] sm:mx-[-1.5rem] mt-[-0.5rem]">
       <div className="grid grid-cols-3 gap-px">
         {reels.map((reel) => (
           <div key={reel.id} className="group cursor-pointer overflow-hidden">
