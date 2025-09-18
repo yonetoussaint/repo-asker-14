@@ -1053,6 +1053,15 @@ const SellerPage: React.FC = () => {
     lastSeen: "2025-09-17T10:30:00Z" // ISO string from your backend
   });
 
+  // Add this useEffect to scroll to top on tab change
+  useEffect(() => {
+    // Scroll to top when tab changes
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth' // or 'auto' for instant scroll
+    });
+  }, [activeTab]);
+
   // Handle case where sellerId is not provided
   if (!sellerId) {
     return <ErrorMessage message="Seller ID is required" />;
