@@ -634,11 +634,11 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full -mx-4 sm:-mx-6">
       <div className="grid grid-cols-3 gap-px">
         {reels.map((reel) => (
           <div key={reel.id} className="group cursor-pointer overflow-hidden">
-            <div className="aspect-[9/16] bg-muted relative">
+            <div className="aspect-[3/4] bg-muted relative">
               {reel.video_url ? (
                 <video 
                   src={reel.video_url} 
