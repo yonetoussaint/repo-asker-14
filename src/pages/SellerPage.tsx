@@ -1232,7 +1232,7 @@ const SellerPage: React.FC = () => {
     <div className="min-h-screen bg-white">  
       <header   
         ref={headerRef}  
-        className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm"  
+        className="fixed top-0 left-0 right-0 z-50 bg-white"  
       >  
         <SellerHeader  
           activeTab={activeTab}  
