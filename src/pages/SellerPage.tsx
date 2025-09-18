@@ -1055,14 +1055,13 @@ const SellerPage: React.FC = () => {
     lastSeen: "2025-09-17T10:30:00Z" // ISO string from your backend  
   });  
   
-  // Add this useEffect to scroll to top on tab change  
-  useEffect(() => {  
-    // Scroll to top when tab changes  
-    window.scrollTo({  
-      top: 0,  
-      behavior: 'smooth' // or 'auto' for instant scroll  
-    });  
-  }, [activeTab]);  
+  // Remove the general scroll-to-top effect since we handle it in tab change
+  // useEffect(() => {  
+  //   window.scrollTo({  
+  //     top: 0,  
+  //     behavior: 'smooth'
+  //   });  
+  // }, [activeTab]);  
   
   // Handle case where sellerId is not provided  
   if (!sellerId) {  
@@ -1174,9 +1173,25 @@ const SellerPage: React.FC = () => {
   
   // Fixed tab change handler
   const handleTabChange = (newTab: string) => {  
+    // If clicking on the currently active tab, scroll to top
+    if (newTab === activeTab) {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      return;
+    }
+    
+    // Otherwise, change to the new tab
     setActiveTab(newTab);  
     // Reset sticky state when changing tabs to recalculate positions
     setIsTabsSticky(false);
+    
+    // Scroll to top for new tab
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
     
     // Force recalculation after state update
     setTimeout(() => {
