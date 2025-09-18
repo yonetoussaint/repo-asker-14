@@ -1035,7 +1035,6 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
 };
 
 // Main SellerPage Component
-              // Main SellerPage Component
 const SellerPage: React.FC = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
   const navigate = useNavigate();
@@ -1075,17 +1074,19 @@ const SellerPage: React.FC = () => {
   // Scroll handling effect for sticky tabs
   useEffect(() => {
     let tabsOriginalOffsetTop = 0;
-    let hasCalculatedOriginalPosition = false;
 
     const calculateOriginalPosition = () => {
-      if (!headerRef.current || !tabsRef.current || hasCalculatedOriginalPosition) return;
+      if (!headerRef.current || !tabsRef.current) return;
 
-      // Only calculate when tabs are in normal flow (not sticky)
-      if (!isTabsSticky) {
-        const tabsRect = tabsRef.current.getBoundingClientRect();
-        const scrollY = window.scrollY;
-        tabsOriginalOffsetTop = tabsRect.top + scrollY;
-        hasCalculatedOriginalPosition = true;
+      const headerHeight = headerRef.current.offsetHeight;
+      
+      // For products tab, include the SellerInfoSection height
+      if (activeTab === 'products') {
+        const sellerInfoHeight = 200; // Approximate height of SellerInfoSection
+        tabsOriginalOffsetTop = headerHeight + sellerInfoHeight;
+      } else {
+        // For other tabs, tabs start right after header
+        tabsOriginalOffsetTop = headerHeight;
       }
     };
 
@@ -1095,32 +1096,27 @@ const SellerPage: React.FC = () => {
       const scrollY = window.scrollY;
       const headerHeight = headerRef.current.offsetHeight;
 
-      // Calculate original position if not done yet
+      // Calculate original position
       calculateOriginalPosition();
 
       // Determine if tabs should be sticky
-      const triggerPoint = tabsOriginalOffsetTop - headerHeight;
-      const shouldBeSticky = scrollY > triggerPoint && hasCalculatedOriginalPosition;
+      const shouldBeSticky = scrollY > (tabsOriginalOffsetTop - headerHeight);
 
       setIsTabsSticky(shouldBeSticky);
     };
 
-    // Reset calculation when tab changes or data loads
-    hasCalculatedOriginalPosition = false;
-    tabsOriginalOffsetTop = 0;
-
-    // Add a delay to ensure DOM is ready
+    // Recalculate when tab changes or data loads
     const timeoutId = setTimeout(() => {
       calculateOriginalPosition();
       window.addEventListener('scroll', handleScroll, { passive: true });
       handleScroll(); // Call once to set initial state
-    }, 150);
+    }, 100);
 
     return () => {
       clearTimeout(timeoutId);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [activeTab, seller]); // Removed isTabsSticky from dependencies to avoid circular updates
+  }, [activeTab, seller]);
 
   // Example effect to simulate real-time online status updates
   useEffect(() => {
@@ -1147,12 +1143,10 @@ const SellerPage: React.FC = () => {
     toast.info("Message feature coming soon");
   };
 
-  // Fixed tab change handler with proper scroll reset
+  // Fixed tab change handler - no scrolling, just reset tab state
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
-    
-    // Reset scroll to top of page when changing tabs
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // No scrolling - let the content naturally position itself
   };
 
   // Loading state
