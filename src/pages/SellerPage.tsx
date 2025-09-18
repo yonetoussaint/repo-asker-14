@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import CustomerReviewsEnhanced from '@/components/product/CustomerReviewsEnhanced';
 import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -875,7 +876,7 @@ const SellerPage: React.FC = () => {
           )}
 
           {activeTab === 'reviews' && (
-            <ReviewsTab seller={seller} />
+            <CustomerReviewsEnhanced productId={sellerId} limit={10} />
           )}
 
           {activeTab === 'contact' && (
