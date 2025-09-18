@@ -621,7 +621,7 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4">
         {reels.map((reel) => (
           <Card key={reel.id} className="group cursor-pointer overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all duration-200">
             <div className="aspect-[9/16] bg-muted relative">
