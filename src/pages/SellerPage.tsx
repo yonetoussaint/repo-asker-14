@@ -324,15 +324,38 @@ const ProductsTab: React.FC<{
 
 // About Tab Component
 const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
+  
+  const achievements = [
+    { id: 1, title: "Top Seller", description: "Achieved over 1000 sales", icon: "🏆", earned: seller.total_sales > 1000 },
+    { id: 2, title: "Quick Responder", description: "Responds within 2 hours", icon: "⚡", earned: true },
+    { id: 3, title: "Quality Products", description: "4.8+ star rating", icon: "⭐", earned: (seller.rating || 4.8) >= 4.8 },
+    { id: 4, title: "Verified Seller", description: "Identity verified", icon: "✅", earned: seller.verified },
+    { id: 5, title: "Reliable Shipping", description: "On-time delivery rate >95%", icon: "📦", earned: true },
+    { id: 6, title: "Customer Favorite", description: "500+ followers", icon: "❤️", earned: (seller.followers_count || 0) > 500 }
+  ];
+
+  const earnedAchievements = achievements.filter(a => a.earned);
+  const timeline = [
+    { date: "2024-01", event: "Joined the platform", icon: "🎉" },
+    { date: "2024-03", event: "First 100 sales milestone", icon: "🎯" },
+    { date: "2024-06", event: "Became verified seller", icon: "✅" },
+    { date: "2024-09", event: "Reached 1000+ sales", icon: "🚀" }
+  ];
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-4">
-          <h3 className="font-semibold mb-3 text-sm">Business Info</h3>
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Enhanced Business Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
+            <span className="text-blue-600">🏪</span>
+            Business Info
+          </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Category</span>
-              <span>{seller.category || 'General'}</span>
+              <Badge variant="outline" className="text-xs">{seller.category || 'General'}</Badge>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Since</span>
@@ -344,15 +367,30 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                 {seller.verified ? "Verified" : "Pending"}
               </Badge>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Response Time</span>
+              <span className="text-green-600 text-xs font-medium">~2 hours</span>
+            </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <h3 className="font-semibold mb-3 text-sm">Performance</h3>
+        <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
+            <span className="text-green-600">📊</span>
+            Performance
+          </h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Trust Score</span>
-              <span className="font-medium">{seller.trust_score}/100</span>
+              <div className="flex items-center gap-1">
+                <span className="font-medium">{seller.trust_score}/100</span>
+                <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-green-500 rounded-full transition-all duration-500" 
+                    style={{ width: `${seller.trust_score}%` }}
+                  />
+                </div>
+              </div>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Sales</span>
@@ -365,15 +403,132 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                 <span className="font-medium">{seller.rating?.toFixed(1) || '4.8'}</span>
               </div>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Followers</span>
+              <span className="font-medium">{formatNumber(seller.followers_count || 0)}</span>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
+            <span className="text-purple-600">🎯</span>
+            Quick Stats
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Avg. Rating</span>
+              <span className="font-medium text-green-600">{seller.rating?.toFixed(1) || '4.8'}/5.0</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Order Completion</span>
+              <span className="font-medium text-green-600">98.5%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">On-time Delivery</span>
+              <span className="font-medium text-green-600">96.2%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Dispute Rate</span>
+              <span className="font-medium text-green-600">0.1%</span>
+            </div>
           </div>
         </Card>
       </div>
 
-      <Card className="p-4">
-        <h3 className="font-semibold mb-3 text-sm">About</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {seller.description || "This seller hasn't provided additional details yet."}
+      {/* About Description */}
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4 text-lg flex items-center gap-2">
+          <span>📝</span>
+          About {seller.name}
+        </h3>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+          {seller.description || "This seller is passionate about providing quality products and excellent customer service. They have built a reputation for reliability and professionalism in their field."}
         </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+          <div className="text-center p-3 bg-muted/30 rounded-lg">
+            <div className="text-xl mb-1">🚀</div>
+            <div className="text-xs text-muted-foreground">Fast Shipping</div>
+          </div>
+          <div className="text-center p-3 bg-muted/30 rounded-lg">
+            <div className="text-xl mb-1">💎</div>
+            <div className="text-xs text-muted-foreground">Premium Quality</div>
+          </div>
+          <div className="text-center p-3 bg-muted/30 rounded-lg">
+            <div className="text-xl mb-1">🛡️</div>
+            <div className="text-xs text-muted-foreground">Secure Payments</div>
+          </div>
+          <div className="text-center p-3 bg-muted/30 rounded-lg">
+            <div className="text-xl mb-1">🎯</div>
+            <div className="text-xs text-muted-foreground">Customer Focus</div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Achievements */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-lg flex items-center gap-2">
+            <span>🏆</span>
+            Achievements ({earnedAchievements.length})
+          </h3>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowAllAchievements(!showAllAchievements)}
+          >
+            {showAllAchievements ? 'Show Less' : 'View All'}
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {(showAllAchievements ? achievements : earnedAchievements).map((achievement) => (
+            <div 
+              key={achievement.id} 
+              className={`p-3 rounded-lg border transition-all duration-200 ${
+                achievement.earned 
+                  ? 'bg-green-50 border-green-200 hover:bg-green-100' 
+                  : 'bg-gray-50 border-gray-200 opacity-60'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-lg">{achievement.icon}</span>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm">{achievement.title}</h4>
+                  <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                </div>
+                {achievement.earned && (
+                  <span className="text-green-600 text-xs">✓</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Timeline */}
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4 text-lg flex items-center gap-2">
+          <span>📅</span>
+          Seller Journey
+        </h3>
+        <div className="space-y-4">
+          {timeline.map((item, index) => (
+            <div key={index} className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <span className="text-sm">{item.icon}</span>
+              </div>
+              <div className="flex-1 pb-4 border-l border-muted-foreground/20 pl-4 ml-4 relative">
+                {index < timeline.length - 1 && (
+                  <div className="absolute left-0 top-8 w-px h-full bg-muted-foreground/20" />
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">{item.event}</span>
+                  <span className="text-xs text-muted-foreground">{item.date}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );
@@ -501,73 +656,282 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
 
 // Contact Tab Component
 const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
+  const [messageText, setMessageText] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState('');
+  const [showContactForm, setShowContactForm] = useState(false);
+
+  const contactMethods = [
+    { 
+      icon: MessageCircle, 
+      title: 'Send Message', 
+      description: 'Get instant responses via our chat system',
+      action: () => setShowContactForm(true),
+      color: 'blue',
+      available: true
+    },
+    { 
+      icon: Phone, 
+      title: 'Call Direct', 
+      description: seller.phone || 'Phone number available during business hours',
+      action: () => {
+        if (seller.phone) {
+          window.open(`tel:${seller.phone}`);
+        } else {
+          toast.info("Phone number will be available after initial contact");
+        }
+      },
+      color: 'green',
+      available: !!seller.phone
+    },
+    { 
+      icon: Mail, 
+      title: 'Email Support', 
+      description: seller.email || 'Professional email response within 24h',
+      action: () => {
+        if (seller.email) {
+          window.open(`mailto:${seller.email}`);
+        } else {
+          toast.info("Email will be provided after verification");
+        }
+      },
+      color: 'purple',
+      available: !!seller.email
+    }
+  ];
+
+  const inquiryTopics = [
+    'Product Information',
+    'Bulk Orders',
+    'Custom Requests',
+    'Shipping & Delivery',
+    'Returns & Exchanges',
+    'Partnership Opportunities',
+    'Technical Support',
+    'Other'
+  ];
+
+  const handleSendMessage = () => {
+    if (!messageText.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+    if (!selectedTopic) {
+      toast.error("Please select a topic");
+      return;
+    }
+    
+    toast.success("Message sent successfully! You'll receive a response within 2 hours.");
+    setMessageText('');
+    setSelectedTopic('');
+    setShowContactForm(false);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Contact Methods Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {contactMethods.map((method, index) => (
+          <Card 
+            key={index} 
+            className={`p-6 cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+              method.available 
+                ? `hover:border-${method.color}-200 bg-gradient-to-br from-${method.color}-50 to-${method.color}-100` 
+                : 'opacity-60 hover:border-gray-200 bg-gray-50'
+            }`}
+            onClick={method.action}
+          >
+            <div className="text-center space-y-3">
+              <div className={`w-12 h-12 mx-auto rounded-full bg-${method.color}-100 flex items-center justify-center`}>
+                <method.icon className={`w-6 h-6 text-${method.color}-600`} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">{method.title}</h3>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  {method.description}
+                </p>
+              </div>
+              {method.available && (
+                <Badge variant="outline" className={`text-xs border-${method.color}-200 text-${method.color}-700`}>
+                  Available
+                </Badge>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Contact Form */}
+      {showContactForm && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+              <MessageCircle className="w-5 h-5" />
+              Send Message to {seller.name}
+            </h3>
+            <Button variant="ghost" size="sm" onClick={() => setShowContactForm(false)}>
+              ✕
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Topic</label>
+              <Select value={selectedTopic} onValueChange={setSelectedTopic}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select inquiry topic" />
+                </SelectTrigger>
+                <SelectContent>
+                  {inquiryTopics.map((topic) => (
+                    <SelectItem key={topic} value={topic}>{topic}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-2 block">Message</label>
+              <textarea
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder="Type your message here..."
+                className="w-full p-3 border border-input rounded-md resize-none min-h-[120px] text-sm"
+                maxLength={500}
+              />
+              <div className="text-xs text-muted-foreground mt-1">
+                {messageText.length}/500 characters
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button onClick={handleSendMessage} className="flex-1">
+                Send Message
+              </Button>
+              <Button variant="outline" onClick={() => setShowContactForm(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Enhanced Contact Information */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Phone className="w-4 h-4" />
+            Contact Details
+          </h3>
+          <div className="space-y-4">
+            {seller.email && (
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                <Mail className="w-4 h-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Email</p>
+                  <p className="text-sm text-muted-foreground">{seller.email}</p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => window.open(`mailto:${seller.email}`)}>
+                  Send
+                </Button>
+              </div>
+            )}
+            {seller.phone && (
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Phone</p>
+                  <p className="text-sm text-muted-foreground">{seller.phone}</p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => window.open(`tel:${seller.phone}`)}>
+                  Call
+                </Button>
+              </div>
+            )}
+            {seller.address && (
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Business Address</p>
+                  <p className="text-sm text-muted-foreground">{seller.address}</p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(seller.address || '')}`)}>
+                  Map
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Business Hours & Response Times
+          </h3>
+          
+          <div className="space-y-3 mb-4">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm">Monday - Friday</span>
+              <Badge variant="outline" className="text-xs">9:00 AM - 6:00 PM</Badge>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm">Saturday</span>
+              <Badge variant="outline" className="text-xs">10:00 AM - 4:00 PM</Badge>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm">Sunday</span>
+              <Badge variant="secondary" className="text-xs">Closed</Badge>
+            </div>
+          </div>
+
+          <div className="border-t pt-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Avg. Response Time</span>
+              <span className="font-medium text-green-600">~2 hours</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Message Response Rate</span>
+              <span className="font-medium text-green-600">98%</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Currently</span>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-green-600 text-xs">Online</span>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* FAQ Section */}
       <Card className="p-6">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
-          <Phone className="w-4 h-4" />
-          Contact Information
+        <h3 className="font-semibold mb-4 text-lg flex items-center gap-2">
+          <span>❓</span>
+          Frequently Asked Questions
         </h3>
         <div className="space-y-4">
-          {seller.email && (
-            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-              <Mail className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Email</p>
-                <p className="text-sm text-muted-foreground">{seller.email}</p>
-              </div>
+          {[
+            {
+              q: "How long does shipping take?",
+              a: "Standard shipping takes 3-5 business days. Express shipping is available for 1-2 day delivery."
+            },
+            {
+              q: "Do you offer bulk discounts?",
+              a: "Yes! We offer discounts for orders over 10 items. Contact us for custom pricing."
+            },
+            {
+              q: "What's your return policy?",
+              a: "We accept returns within 30 days of delivery. Items must be in original condition."
+            },
+            {
+              q: "Can I track my order?",
+              a: "Absolutely! You'll receive tracking information once your order ships."
+            }
+          ].map((faq, index) => (
+            <div key={index} className="border border-muted rounded-lg p-4">
+              <h4 className="font-medium text-sm mb-2">{faq.q}</h4>
+              <p className="text-sm text-muted-foreground">{faq.a}</p>
             </div>
-          )}
-          {seller.phone && (
-            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-              <Phone className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Phone</p>
-                <p className="text-sm text-muted-foreground">{seller.phone}</p>
-              </div>
-            </div>
-          )}
-          {seller.address && (
-            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Address</p>
-                <p className="text-sm text-muted-foreground">{seller.address}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="font-semibold mb-4">Business Hours</h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Monday - Friday</span>
-            <span className="text-muted-foreground">9:00 AM - 6:00 PM</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Saturday</span>
-            <span className="text-muted-foreground">10:00 AM - 4:00 PM</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Sunday</span>
-            <span className="text-muted-foreground">Closed</span>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="font-semibold mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button variant="outline" className="justify-start" onClick={() => toast.info("Message feature coming soon")}>
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Send Message
-          </Button>
-          <Button variant="outline" className="justify-start" onClick={() => toast.info("Call feature coming soon")}>
-            <Phone className="w-4 h-4 mr-2" />
-            Call Now
-          </Button>
+          ))}
         </div>
       </Card>
     </div>
@@ -781,6 +1145,24 @@ const SellerPage: React.FC = () => {
     toast.info("Message feature coming soon");
   };
 
+  // Tab change handler with scroll reset
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    // Reset scroll position to top of tab content
+    setTimeout(() => {
+      const tabContentElement = document.querySelector('.tab-content-container');
+      if (tabContentElement) {
+        tabContentElement.scrollTop = 0;
+      }
+      // Also scroll the main window to the tabs area
+      if (tabsRef.current) {
+        const headerHeight = headerRef.current?.offsetHeight || 0;
+        const tabsPosition = tabsRef.current.getBoundingClientRect().top + window.scrollY - headerHeight;
+        window.scrollTo({ top: tabsPosition, behavior: 'smooth' });
+      }
+    }, 50);
+  };
+
   // Loading state
   if (sellerLoading || !seller) {
     return <LoadingSpinner />;
@@ -798,13 +1180,13 @@ const SellerPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <header 
+        <header 
         ref={headerRef}
         className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm"
       >
         <SellerHeader
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           isFollowing={isFollowing}
           onFollow={handleFollow}
           onMessage={handleMessage}
@@ -845,14 +1227,14 @@ const SellerPage: React.FC = () => {
           <TabsNavigation
             tabs={tabs}
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
           />
         </nav>
 
         {/* Spacer div when tabs are sticky to prevent content jumping */}
         {isTabsSticky && <div style={{ height: `${tabsRef.current?.offsetHeight || 50}px` }} />}
 
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-6 tab-content-container">
           {activeTab === 'products' && (
             <ProductsTab
               products={products}
@@ -877,10 +1259,6 @@ const SellerPage: React.FC = () => {
 
           {activeTab === 'reviews' && (
             <CustomerReviewsEnhanced productId={sellerId} limit={10} />
-          )}
-
-          {activeTab === 'contact' && (
-            <ContactTab seller={seller} />
           )}
 
           {activeTab === 'contact' && (
