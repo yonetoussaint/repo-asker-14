@@ -1083,20 +1083,33 @@ const SellerPage: React.FC = () => {
   }  
   
   // Improved scroll handling effect for sticky tabs  
-  useEffect(() => {  
+  useEffect(() => {
+    let originalTabsOffsetTop = 0;
+    
+    const calculateOriginalPosition = () => {
+      if (!headerRef.current || !tabsRef.current) return;
+      
+      // Calculate the original position of tabs in the document flow
+      const headerHeight = headerRef.current.offsetHeight;
+      
+      if (activeTab === 'products' && sellerInfoRef.current) {
+        // For products tab, tabs come after header + seller info
+        const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
+        originalTabsOffsetTop = headerHeight + sellerInfoHeight;
+      } else {
+        // For other tabs, tabs come right after header
+        originalTabsOffsetTop = headerHeight;
+      }
+    };
+    
     const handleScroll = () => {  
       if (!headerRef.current || !tabsRef.current) return;  
   
       const scrollY = window.scrollY;  
       const headerHeight = headerRef.current.offsetHeight;  
       
-      // Get the tabs element's original position in the document
-      const tabsRect = tabsRef.current.getBoundingClientRect();
-      const tabsOffsetTop = scrollY + tabsRect.top;
-      
-      // Calculate when tabs should become sticky
-      // This should happen when the tabs would normally scroll past the bottom of the header
-      const stickyThreshold = tabsOffsetTop - headerHeight;
+      // Recalculate original position (in case content changed)
+      calculateOriginalPosition();
       
       // Store tabs height for spacer
       if (tabsRef.current.offsetHeight !== tabsHeight) {
@@ -1104,7 +1117,8 @@ const SellerPage: React.FC = () => {
       }
       
       // Determine if tabs should be sticky
-      const shouldBeSticky = scrollY >= stickyThreshold;
+      // They become sticky when they would scroll past the header
+      const shouldBeSticky = scrollY > (originalTabsOffsetTop - headerHeight);
       
       // Only update state if it changed to prevent unnecessary re-renders
       if (shouldBeSticky !== isTabsSticky) {
@@ -1119,8 +1133,9 @@ const SellerPage: React.FC = () => {
       rafId = requestAnimationFrame(handleScroll);
     };
     
-    // Initial calculation after a short delay to ensure all elements are rendered
+    // Initial calculation and setup
     const timeoutId = setTimeout(() => {
+      calculateOriginalPosition();
       handleScroll(); // Set initial state
       window.addEventListener('scroll', throttledHandleScroll, { passive: true });
     }, 100);  
@@ -1157,11 +1172,30 @@ const SellerPage: React.FC = () => {
     toast.info("Message feature coming soon");  
   };  
   
-  // Fixed tab change handler - no scrolling, just reset tab state  
+  // Fixed tab change handler
   const handleTabChange = (newTab: string) => {  
     setActiveTab(newTab);  
     // Reset sticky state when changing tabs to recalculate positions
     setIsTabsSticky(false);
+    
+    // Force recalculation after state update
+    setTimeout(() => {
+      if (headerRef.current && tabsRef.current) {
+        const scrollY = window.scrollY;
+        const headerHeight = headerRef.current.offsetHeight;
+        let originalTabsOffsetTop = 0;
+        
+        if (newTab === 'products' && sellerInfoRef.current) {
+          const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
+          originalTabsOffsetTop = headerHeight + sellerInfoHeight;
+        } else {
+          originalTabsOffsetTop = headerHeight;
+        }
+        
+        const shouldBeSticky = scrollY > (originalTabsOffsetTop - headerHeight);
+        setIsTabsSticky(shouldBeSticky);
+      }
+    }, 50);
   };  
   
   // Loading state  
