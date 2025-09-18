@@ -1053,15 +1053,6 @@ const SellerPage: React.FC = () => {
     lastSeen: "2025-09-17T10:30:00Z" // ISO string from your backend
   });
 
-  // Add this useEffect to scroll to top on tab change
-  useEffect(() => {
-    // Scroll to top when tab changes
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth' // or 'auto' for instant scroll
-    });
-  }, [activeTab]);
-
   // Handle case where sellerId is not provided
   if (!sellerId) {
     return <ErrorMessage message="Seller ID is required" />;
@@ -1083,6 +1074,7 @@ const SellerPage: React.FC = () => {
   // Scroll handling effect for sticky tabs
   useEffect(() => {
     let tabsOriginalOffsetTop = 0;
+    let rafId: number;
 
     const calculateOriginalPosition = () => {
       if (!headerRef.current || !tabsRef.current) return;
@@ -1091,7 +1083,8 @@ const SellerPage: React.FC = () => {
       
       // For products tab, include the SellerInfoSection height
       if (activeTab === 'products') {
-        const sellerInfoHeight = 200; // Approximate height of SellerInfoSection
+        const sellerInfoSection = document.querySelector('.seller-info-section');
+        const sellerInfoHeight = sellerInfoSection?.clientHeight || 200;
         tabsOriginalOffsetTop = headerHeight + sellerInfoHeight;
       } else {
         // For other tabs, tabs start right after header
@@ -1114,18 +1107,49 @@ const SellerPage: React.FC = () => {
       setIsTabsSticky(shouldBeSticky);
     };
 
+    const optimizedScrollHandler = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(handleScroll);
+    };
+
     // Recalculate when tab changes or data loads
     const timeoutId = setTimeout(() => {
       calculateOriginalPosition();
-      window.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('scroll', optimizedScrollHandler, { passive: true });
       handleScroll(); // Call once to set initial state
     }, 100);
 
     return () => {
       clearTimeout(timeoutId);
-      window.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', optimizedScrollHandler);
     };
   }, [activeTab, seller]);
+
+  // Scroll to top effect - delayed to ensure DOM is updated
+  useEffect(() => {
+    const scrollTimeout = setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      
+      // Recalculate sticky position after scroll completes
+      const recalcTimeout = setTimeout(() => {
+        setIsTabsSticky(false); // Reset sticky state temporarily
+        // Force re-layout to ensure proper calculation
+        if (tabsRef.current) {
+          tabsRef.current.style.display = 'none';
+          tabsRef.current.offsetHeight; // Trigger reflow
+          tabsRef.current.style.display = '';
+        }
+      }, 500); // Match the scroll duration
+
+      return () => clearTimeout(recalcTimeout);
+    }, 50); // Small delay to ensure DOM updates
+
+    return () => clearTimeout(scrollTimeout);
+  }, [activeTab]);
 
   // Example effect to simulate real-time online status updates
   useEffect(() => {
@@ -1152,10 +1176,9 @@ const SellerPage: React.FC = () => {
     toast.info("Message feature coming soon");
   };
 
-  // Fixed tab change handler - no scrolling, just reset tab state
+  // Tab change handler
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
-    // No scrolling - let the content naturally position itself
   };
 
   // Loading state
@@ -1207,6 +1230,7 @@ const SellerPage: React.FC = () => {
             seller={seller} 
             products={products} 
             onlineStatus={onlineStatus}
+            className="seller-info-section"
           />
         )}
 
@@ -1214,10 +1238,15 @@ const SellerPage: React.FC = () => {
           ref={tabsRef}
           className={`bg-white border-b transition-all duration-300 ${
             isTabsSticky 
-              ? 'fixed top-0 left-0 right-0 z-40' 
+              ? 'fixed top-0 left-0 right-0 z-40 shadow-md' 
               : 'relative'
           }`}
-          style={isTabsSticky ? { top: `${headerHeight}px` } : undefined}
+          style={isTabsSticky ? { 
+            top: `${headerHeight}px`,
+            transition: 'all 0.3s ease-in-out'
+          } : {
+            transition: 'all 0.3s ease-in-out'
+          }}
         >
           <TabsNavigation
             tabs={tabs}
@@ -1227,7 +1256,14 @@ const SellerPage: React.FC = () => {
         </nav>
 
         {/* Spacer div when tabs are sticky to prevent content jumping */}
-        {isTabsSticky && <div style={{ height: `${tabsRef.current?.offsetHeight || 50}px` }} />}
+        {isTabsSticky && (
+          <div 
+            style={{ 
+              height: `${tabsRef.current?.offsetHeight || 50}px`,
+              transition: 'height 0.3s ease-in-out'
+            }} 
+          />
+        )}
 
         <div 
           ref={mainContentRef}
