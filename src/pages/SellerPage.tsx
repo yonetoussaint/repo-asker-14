@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSeller, useSellerProducts } from '@/hooks/useSeller';
+import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SellerHeader from '@/components/product/SellerHeader';
 import TabsNavigation from '@/components/home/TabsNavigation';
-import { Heart, MessageCircle, Star, Search, Package, Calendar, Users } from 'lucide-react';
+import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,11 @@ interface Product {
   created_at: string;
   saves?: number;
   views?: number;
+  product_images?: Array<{
+    id: string;
+    src: string;
+    alt?: string;
+  }>;
 }
 
 interface Seller {
@@ -29,13 +34,16 @@ interface Seller {
   name: string;
   description?: string;
   category?: string;
-  created_at: string;
+  created_at?: string;
   verified?: boolean;
   trust_score: number;
   total_sales: number;
   rating?: number;
   followers_count?: number;
   profile_image?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
 }
 
 interface OnlineStatus {
@@ -280,8 +288,18 @@ const ProductsTab: React.FC<{
               className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden border-0 shadow-sm"
               onClick={() => navigate(`/product/${product.id}`)}
             >
-              <div className="aspect-square bg-muted rounded-t-lg flex items-center justify-center">
-                <Package className="w-10 h-10 text-muted-foreground" />
+              <div className="aspect-square bg-muted rounded-t-lg overflow-hidden">
+                {product.product_images && product.product_images.length > 0 ? (
+                  <img 
+                    src={product.product_images[0].src} 
+                    alt={product.product_images[0].alt || product.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                )}
               </div>
               <div className="p-3 space-y-2">
                 <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors leading-tight">
@@ -423,6 +441,138 @@ const ReviewsTab: React.FC<{ seller: Seller }> = ({ seller }) => {
   );
 };
 
+// Reels Tab Component
+const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
+  const { data: reels = [], isLoading } = useSellerReels(sellerId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (reels.length === 0) {
+    return (
+      <div className="text-center py-12 bg-muted/20 rounded-lg">
+        <Play className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+        <h3 className="font-medium mb-2">No reels yet</h3>
+        <p className="text-sm text-muted-foreground">Check back later for new video content</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {reels.map((reel) => (
+          <Card key={reel.id} className="group cursor-pointer overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all duration-200">
+            <div className="aspect-[9/16] bg-muted relative">
+              {reel.video_url ? (
+                <video 
+                  src={reel.video_url} 
+                  className="w-full h-full object-cover"
+                  muted
+                  preload="metadata"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Play className="w-8 h-8 text-muted-foreground" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                <Play className="w-8 h-8 text-white opacity-80" />
+              </div>
+              <div className="absolute bottom-2 left-2 right-2">
+                <div className="flex items-center justify-between text-white text-xs">
+                  <span>{reel.views || 0} views</span>
+                  <span>{reel.likes || 0} likes</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Contact Tab Component
+const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <Phone className="w-4 h-4" />
+          Contact Information
+        </h3>
+        <div className="space-y-4">
+          {seller.email && (
+            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <Mail className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Email</p>
+                <p className="text-sm text-muted-foreground">{seller.email}</p>
+              </div>
+            </div>
+          )}
+          {seller.phone && (
+            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <Phone className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Phone</p>
+                <p className="text-sm text-muted-foreground">{seller.phone}</p>
+              </div>
+            </div>
+          )}
+          {seller.address && (
+            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+              <MapPin className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Address</p>
+                <p className="text-sm text-muted-foreground">{seller.address}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4">Business Hours</h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span>Monday - Friday</span>
+            <span className="text-muted-foreground">9:00 AM - 6:00 PM</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Saturday</span>
+            <span className="text-muted-foreground">10:00 AM - 4:00 PM</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Sunday</span>
+            <span className="text-muted-foreground">Closed</span>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button variant="outline" className="justify-start" onClick={() => toast.info("Message feature coming soon")}>
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Send Message
+          </Button>
+          <Button variant="outline" className="justify-start" onClick={() => toast.info("Call feature coming soon")}>
+            <Phone className="w-4 h-4 mr-2" />
+            Call Now
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
 // Main SellerPage Component
 const SellerPage: React.FC = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
@@ -542,8 +692,10 @@ const SellerPage: React.FC = () => {
   const headerHeight = headerRef.current?.offsetHeight || 0;
   const tabs = [
     { id: 'products', label: 'Products' },
+    { id: 'reels', label: 'Reels' },
     { id: 'about', label: 'About' },
     { id: 'reviews', label: 'Reviews' },
+    { id: 'contact', label: 'Contact' },
   ];
 
   return (
@@ -615,12 +767,24 @@ const SellerPage: React.FC = () => {
             />
           )}
 
+          {activeTab === 'reels' && (
+            <ReelsTab sellerId={sellerId} />
+          )}
+
           {activeTab === 'about' && (
             <AboutTab seller={seller} />
           )}
 
           {activeTab === 'reviews' && (
             <ReviewsTab seller={seller} />
+          )}
+
+          {activeTab === 'contact' && (
+            <ContactTab seller={seller} />
+          )}
+
+          {activeTab === 'contact' && (
+            <ContactTab seller={seller} />
           )}
         </div>
       </main>
