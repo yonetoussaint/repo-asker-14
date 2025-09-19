@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomerReviewsEnhanced from '@/components/product/CustomerReviewsEnhanced';
+import ProductQA from '@/components/product/ProductQA';
 import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -1238,8 +1239,9 @@ const SellerPage: React.FC = () => {
     { id: 'reels', label: 'Reels' },  
     { id: 'about', label: 'About' },  
     { id: 'reviews', label: 'Reviews' },  
+    { id: 'qas', label: 'Q&A' },  
     { id: 'contact', label: 'Contact' },  
-  ];  
+  ];
   
   return (  
     <div className="min-h-screen bg-white">  
@@ -1336,10 +1338,14 @@ const SellerPage: React.FC = () => {
           {activeTab === 'reviews' && (  
             <CustomerReviewsEnhanced productId={sellerId} limit={10} />  
           )}  
-  
+   
+          {activeTab === 'qas' && (  
+            <ProductQA productId={sellerId} limit={10} />  
+          )}  
+   
           {activeTab === 'contact' && (  
             <ContactTab seller={seller} />  
-          )}  
+          )}
         </div>  
       </main>  
     </div>  

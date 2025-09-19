@@ -88,7 +88,7 @@ const QuantityControls = ({ quantity, stockLeft, onDecrease, onIncrease }) => {
 
 // Product Info Component
 const ProductInfo = ({ 
-  product = {}, 
+  product = { image: '', name: '' }, 
   selectedColor, 
   selectedStorage, 
   selectedNetwork, 
@@ -108,7 +108,7 @@ const ProductInfo = ({
       />
       <div className="flex-1 min-w-0">
         <div className="font-medium text-gray-900 text-base truncate">
-          {product.name}
+          {product.name || "Product"}
         </div>
         <div className="text-sm text-gray-500 truncate">
           {selectedColor && `${selectedColor} • `}
@@ -299,15 +299,7 @@ const StickyCheckoutBar = ({
     }
 
     if (typeof onAddToCart === 'function') {
-      onAddToCart({
-        product,
-        quantity,
-        selectedColor,
-        selectedStorage,
-        selectedNetwork,
-        selectedCondition,
-        price: unitPrice
-      });
+      onAddToCart();
     }
 
     setIsExpanded(false);
