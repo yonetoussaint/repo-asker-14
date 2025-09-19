@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useEffect, useState, useRef } from "react";
+import React, { forwardRef, useImperativeHandle, useEffect } from "react";
 import { 
   Carousel,
   CarouselContent,
@@ -91,7 +91,7 @@ const ProductImageGallery = forwardRef<ProductImageGalleryRef, ProductImageGalle
     setInternalConfigData,
     setShowConfiguration,
     setFocusMode,
-    containerRef: galleryContainerRef,
+    containerRef,
     imageRef,
     videoRef,
     tabsContainerRef,
@@ -208,86 +208,6 @@ const ProductImageGallery = forwardRef<ProductImageGalleryRef, ProductImageGalle
     getActiveTab: () => internalActiveTab // Return internal state
   }));
 
-  // Add state for sticky tabs
-  const [isTabsSticky, setIsTabsSticky] = useState(false);
-  const [tabsHeight, setTabsHeight] = useState(0);
-
-  // Tab change with scroll reset functionality
-  const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab);
-    
-    // Scroll to gallery container to reset position when changing tabs
-    if (galleryState.containerRef.current) {
-      const galleryTop = galleryState.containerRef.current.offsetTop;
-      window.scrollTo({
-        top: galleryTop - 20, // Small offset to show the gallery nicely
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  // Sticky tabs logic
-  useEffect(() => {
-    if (totalItems <= 1) return; // No tabs to make sticky
-    
-    let originalTabsOffsetTop = 0;
-    
-    const calculateOriginalPosition = () => {
-      if (!tabsContainerRef.current || !galleryState.containerRef.current) return;
-      
-      // Calculate the original position of tabs in the document flow
-      const galleryTop = galleryState.containerRef.current.offsetTop;
-      const galleryHeight = galleryState.containerRef.current.offsetHeight;
-      
-      // Tabs come after the gallery in the flow
-      originalTabsOffsetTop = galleryTop + galleryHeight;
-    };
-    
-    const handleScroll = () => {
-      if (!tabsContainerRef.current || !galleryState.containerRef.current) return;
-      
-      const scrollY = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      
-      // Recalculate original position (in case content changed)
-      calculateOriginalPosition();
-      
-      // Store tabs height for spacer
-      if (tabsContainerRef.current.offsetHeight !== tabsHeight) {
-        setTabsHeight(tabsContainerRef.current.offsetHeight);
-      }
-      
-      // Determine if tabs should be sticky
-      // They become sticky when they would scroll out of view
-      const shouldBeSticky = scrollY > (originalTabsOffsetTop - viewportHeight * 0.9);
-      
-      // Only update state if it changed to prevent unnecessary re-renders
-      if (shouldBeSticky !== isTabsSticky) {
-        setIsTabsSticky(shouldBeSticky);
-      }
-    };
-    
-    // Use RAF for smoother scrolling performance
-    let rafId: number;
-    const throttledHandleScroll = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(handleScroll);
-    };
-    
-    // Initial calculation and setup
-    const timeoutId = setTimeout(() => {
-      calculateOriginalPosition();
-      handleScroll(); // Set initial state
-      window.addEventListener('scroll', throttledHandleScroll, { passive: true });
-    }, 100);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', throttledHandleScroll);
-    };
-  }, [totalItems, isTabsSticky, tabsHeight]);
-
   // Video control handlers
   const handleMuteToggle = () => {
     if (videoRef.current) {
@@ -358,7 +278,7 @@ const ProductImageGallery = forwardRef<ProductImageGalleryRef, ProductImageGalle
   }
 
   return (
-    <div ref={galleryState.containerRef} className="flex flex-col bg-transparent w-full max-w-full overflow-x-hidden">
+    <div ref={containerRef} className="flex flex-col bg-transparent w-full max-w-full overflow-x-hidden">
       <div className="relative w-full aspect-square overflow-hidden max-w-full">
         <Carousel
           className="w-full h-full"
@@ -472,42 +392,25 @@ const ProductImageGallery = forwardRef<ProductImageGalleryRef, ProductImageGalle
   selectedCondition={configurationData?.selectedCondition || internalConfigData?.selectedCondition}
 />
       {totalItems > 1 && (
-        <>
-          <div 
-            ref={tabsContainerRef} 
-            className={`w-full bg-white transition-all duration-200 ease-out ${
-              isTabsSticky 
-                ? 'fixed top-0 left-0 right-0 z-40 shadow-sm border-b' 
-                : 'relative'
-            }`}
-          >
-            <TabsNavigation
-              tabs={[
-                { id: 'overview', label: 'Overview' },
-                ...(product && (
-                  ('variants' in product && Array.isArray((product as any).variants) && (product as any).variants.length > 0) ||
-                  ('variant_names' in product && Array.isArray((product as any).variant_names) && (product as any).variant_names.length > 0)
-                ) ? [{ id: 'variants', label: 'Variants' }] : []),
-                { id: 'reviews', label: 'Reviews' },
-                { id: 'qna', label: 'Q&A' },
-                { id: 'shipping', label: 'Shipping' },
-                { id: 'recommendations', label: 'Recommendations' }
-              ]}
-              activeTab={internalActiveTab} // Use internal state for TabsNavigation
-              onTabChange={handleTabChange} // Use the new handler with scroll reset
-              edgeToEdge={true}
-              style={{ backgroundColor: 'white' }}
-            />
-          </div>
-          
-          {/* Spacer div when tabs are sticky to prevent content jumping */}
-          {isTabsSticky && (
-            <div 
-              className="transition-all duration-200 ease-out"
-              style={{ height: `${tabsHeight}px` }} 
-            />
-          )}
-        </>
+        <div ref={tabsContainerRef} className="w-full bg-white">
+          <TabsNavigation
+            tabs={[
+              { id: 'overview', label: 'Overview' },
+              ...(product && (
+                ('variants' in product && Array.isArray((product as any).variants) && (product as any).variants.length > 0) ||
+                ('variant_names' in product && Array.isArray((product as any).variant_names) && (product as any).variant_names.length > 0)
+              ) ? [{ id: 'variants', label: 'Variants' }] : []),
+              { id: 'reviews', label: 'Reviews' },
+              { id: 'qna', label: 'Q&A' },
+              { id: 'shipping', label: 'Shipping' },
+              { id: 'recommendations', label: 'Recommendations' }
+            ]}
+            activeTab={internalActiveTab} // Use internal state for TabsNavigation
+            onTabChange={setActiveTab} // Use internal setter
+            edgeToEdge={true}
+            style={{ backgroundColor: 'white' }}
+          />
+        </div>
       )}
 
       <GalleryTabsContent
