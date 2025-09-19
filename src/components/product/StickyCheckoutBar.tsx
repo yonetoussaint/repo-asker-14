@@ -440,17 +440,17 @@ const StickyCheckoutBar = ({
               )}
             </button>
 
-            {/* Add to Cart Button */}
+            {/* Add to Cart Button - Now expands the panel */}
             <button 
-              onClick={handleAddToCart}
+              onClick={() => setIsExpanded(true)}
               className="flex-1 py-2 bg-white border border-gray-300 text-gray-800 rounded-full font-semibold text-sm hover:bg-gray-50 transition-colors shadow-sm"
             >
               Add to Cart
             </button>
 
-            {/* Checkout Button */}
+            {/* Checkout Button - Now expands the panel */}
             <button 
-              onClick={handleBuyNow}
+              onClick={() => setIsExpanded(true)}
               className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg"
             >
               Checkout
