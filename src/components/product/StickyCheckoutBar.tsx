@@ -57,26 +57,6 @@ const PaymentMethod = ({
   );
 };
 
-// Order Summary Component
-const OrderSummary = ({ product, quantity, selectedColor, selectedStorage, totalPrice, currencySymbol, formatPrice }) => {
-  return (
-    <div className="bg-gray-50 rounded-lg p-3 mb-4">
-      <div className="text-sm font-medium text-gray-900 mb-2">Order Summary</div>
-      <div className="text-sm space-y-1">
-        <div className="flex justify-between items-center">
-          <span className="text-gray-600">{product?.name}</span>
-          <span className="font-medium">{currencySymbol}{formatPrice(totalPrice)}</span>
-        </div>
-        <div className="text-xs text-gray-500">
-          {selectedColor && `${selectedColor} • `}
-          {selectedStorage && `${selectedStorage} • `}
-          Qty: {quantity}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Quantity Controls Component
 const QuantityControls = ({ quantity, stockLeft, onDecrease, onIncrease }) => {
   return (
@@ -154,16 +134,6 @@ const MockPaymentDialog = ({ open, onOpenChange, product, quantity, totalPrice, 
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
         <h3 className="text-lg font-semibold mb-4">Choose Payment Method</h3>
-
-        <OrderSummary 
-          product={product}
-          quantity={quantity}
-          selectedColor={selectedColor}
-          selectedStorage={selectedStorage}
-          totalPrice={totalPrice}
-          currencySymbol="$"
-          formatPrice={(price) => price.toFixed(2)}
-        />
 
         {/* Payment Methods */}
         <div className="space-y-3 mb-6">
@@ -514,17 +484,6 @@ const StickyCheckoutBar = ({
                 </>
               ) : (
                 <>
-                  {/* Order Summary */}
-                  <OrderSummary
-                    product={product}
-                    quantity={quantity}
-                    selectedColor={selectedColor}
-                    selectedStorage={selectedStorage}
-                    totalPrice={unitPrice * quantity}
-                    currencySymbol={currencies[currentCurrency]}
-                    formatPrice={formatPrice}
-                  />
-
                   {/* Payment Methods */}
                   <div className="space-y-3">
                     <div className="text-sm font-medium text-gray-900 mb-2">Choose Payment Method</div>
