@@ -87,7 +87,18 @@ const QuantityControls = ({ quantity, stockLeft, onDecrease, onIncrease }) => {
 };
 
 // Product Info Component
-const ProductInfo = ({ product, selectedColor, selectedStorage, selectedNetwork, selectedCondition, selectedColorImage, quantity, currencySymbol, formatPrice, unitPrice }) => {
+const ProductInfo = ({ 
+  product = {}, 
+  selectedColor, 
+  selectedStorage, 
+  selectedNetwork, 
+  selectedCondition, 
+  selectedColorImage, 
+  quantity = 1, 
+  currencySymbol = "$", 
+  formatPrice = (price) => price?.toFixed(2) || "0.00", 
+  unitPrice = 0 
+}) => {
   return (
     <div className="flex items-center gap-3">
       <img 
@@ -103,11 +114,12 @@ const ProductInfo = ({ product, selectedColor, selectedStorage, selectedNetwork,
           {selectedColor && `${selectedColor} • `}
           {selectedStorage && `${selectedStorage} • `}
           {selectedNetwork && `${selectedNetwork} • `}
-          {selectedCondition && `${selectedCondition} • `}
-          Qty: {quantity}
+          {selectedCondition && selectedCondition}
         </div>
-        <div className="text-lg font-bold text-orange-500 mt-1">
-          {currencySymbol}{formatPrice(unitPrice * quantity)}
+        <div className="text-lg font-bold mt-1 flex items-center gap-2">
+          <span className="text-orange-500">{currencySymbol}{formatPrice(unitPrice * quantity)}</span>
+          <div className="w-px h-3 bg-gray-400"></div>
+          <span className="text-gray-600">{quantity} units</span>
         </div>
       </div>
     </div>
