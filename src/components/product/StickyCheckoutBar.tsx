@@ -239,6 +239,8 @@ const StickyCheckoutBar = ({
   selectedColorImage = null,
   onAddToCart = () => {},
   onBuyNow = () => {},
+  cartItemCount = 0,
+  onViewCart = () => {},
   currentPrice = null,
   currentStock = null,
   className = ''
@@ -338,6 +340,12 @@ const StickyCheckoutBar = ({
     setShowPaymentMethods(true);
   };
 
+  const handleViewCart = () => {
+    if (typeof onViewCart === 'function') {
+      onViewCart();
+    }
+  };
+
   const handleContinuePayment = async () => {
     if (!selectedPaymentMethod) {
       alert('Please select a payment method');
@@ -414,11 +422,25 @@ const StickyCheckoutBar = ({
         />
       )}
 
-      {/* Sticky Bottom Bar - Simple Button */}
+      {/* Sticky Bottom Bar - Three Buttons */}
       <div ref={barRef} className={`fixed bottom-0 left-0 right-0 z-[45] transition-all duration-300 ease-out ${className}`}>
-        {/* Simple Proceed to Checkout Button */}
+        {/* Three Button Layout */}
         {!isExpanded && (
           <div className="p-3 bg-white border-t border-gray-200 flex gap-2">
+            {/* Cart Button with Item Count */}
+            <button 
+              onClick={handleViewCart}
+              className="relative w-12 h-12 bg-white border border-gray-300 text-gray-800 rounded-full font-semibold hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
+            </button>
+            
+            {/* Add to Cart Button */}
             <button 
               onClick={handleAddToCart}
               className="flex-1 py-3 bg-white border border-gray-300 text-gray-800 rounded-full font-semibold text-base hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center gap-2"
@@ -426,6 +448,8 @@ const StickyCheckoutBar = ({
               <ShoppingCart className="w-5 h-5" />
               Add to Cart
             </button>
+            
+            {/* Checkout Button */}
             <button 
               onClick={handleBuyNow}
               className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-semibold text-base hover:opacity-90 transition-opacity shadow-lg"
