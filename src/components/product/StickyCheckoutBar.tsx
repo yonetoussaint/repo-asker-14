@@ -315,7 +315,7 @@ const StickyCheckoutBar = ({
       setIsExpanded(false);
       return;
     }
-    
+
     if (typeof onAddToCart === 'function') {
       onAddToCart({
         product,
@@ -327,7 +327,7 @@ const StickyCheckoutBar = ({
         price: unitPrice
       });
     }
-    
+
     setIsExpanded(false);
   };
 
@@ -426,33 +426,32 @@ const StickyCheckoutBar = ({
       <div ref={barRef} className={`fixed bottom-0 left-0 right-0 z-[45] transition-all duration-300 ease-out ${className}`}>
         {/* Three Button Layout */}
         {!isExpanded && (
-          <div className="p-3 bg-white border-t border-gray-200 flex gap-2">
+          <div className="p-2 bg-white border-t border-gray-200 flex gap-2">
             {/* Cart Button with Item Count */}
             <button 
               onClick={handleViewCart}
-              className="relative w-12 h-12 bg-white border border-gray-300 text-gray-800 rounded-full font-semibold hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center"
+              className="relative w-10 h-10 bg-white border border-gray-300 text-gray-800 rounded-full font-semibold hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center"
             >
-              <ShoppingCart className="w-6 h-6" />
+              <ShoppingCart className="w-5 h-5" />
               {cartItemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {cartItemCount}
                 </span>
               )}
             </button>
-            
+
             {/* Add to Cart Button */}
             <button 
               onClick={handleAddToCart}
-              className="flex-1 py-3 bg-white border border-gray-300 text-gray-800 rounded-full font-semibold text-base hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center gap-2"
+              className="flex-1 py-2 bg-white border border-gray-300 text-gray-800 rounded-full font-semibold text-sm hover:bg-gray-50 transition-colors shadow-sm"
             >
-              <ShoppingCart className="w-5 h-5" />
               Add to Cart
             </button>
-            
+
             {/* Checkout Button */}
             <button 
               onClick={handleBuyNow}
-              className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-semibold text-base hover:opacity-90 transition-opacity shadow-lg"
+              className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg"
             >
               Checkout
             </button>
@@ -501,16 +500,14 @@ const StickyCheckoutBar = ({
                   <div className="flex gap-2">
                     <button 
                       onClick={handleAddToCart}
-                      className="flex-1 bg-white border border-gray-300 text-gray-800 py-3 rounded-full font-semibold text-base hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 bg-white border border-gray-300 text-gray-800 py-2 rounded-full font-semibold text-sm hover:bg-gray-50 transition-colors"
                     >
-                      <ShoppingCart className="w-5 h-5" />
                       Add to Cart
                     </button>
                     <button 
                       onClick={handleBuyNow}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-full font-semibold text-base hover:opacity-90 flex items-center justify-center gap-2 shadow-lg"
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-full font-semibold text-sm hover:opacity-90 shadow-lg"
                     >
-                      <CreditCard className="w-5 h-5" />
                       Checkout
                     </button>
                   </div>
@@ -567,7 +564,7 @@ const StickyCheckoutBar = ({
                   <button 
                     onClick={handleContinuePayment}
                     disabled={!selectedPaymentMethod}
-                    className={`w-full py-3 rounded-full font-medium text-base transition-colors ${
+                    className={`w-full py-2 rounded-full font-medium text-sm transition-colors ${
                       selectedPaymentMethod
                         ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:opacity-90'
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
