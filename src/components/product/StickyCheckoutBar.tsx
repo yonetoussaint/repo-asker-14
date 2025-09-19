@@ -1,16 +1,145 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronUp, Minus, Plus, CreditCard, LogIn } from 'lucide-react';
+import { ChevronDown, ChevronUp, Minus, Plus, CreditCard, LogIn, ShoppingCart } from 'lucide-react';
 import { useCurrency, currencies, currencyToCountry } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/contexts/auth/AuthContext';
 import { useAuthOverlay } from '@/context/AuthOverlayContext';
 import { Button } from '@/components/ui/button';
 
+// Payment Method Component
+const PaymentMethod = ({ 
+  method, 
+  isSelected, 
+  onSelect, 
+  icon, 
+  title, 
+  description, 
+  borderColor = 'blue' 
+}) => {
+  const borderColors = {
+    blue: 'border-blue-500 bg-blue-50',
+    orange: 'border-orange-500 bg-orange-50',
+    gray: 'border-gray-200 hover:border-gray-300'
+  };
+
+  const bgColors = {
+    blue: 'bg-blue-100',
+    orange: 'bg-orange-100'
+  };
+
+  return (
+    <div 
+      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+        isSelected ? borderColors[borderColor] : 'border-gray-200 hover:border-gray-300'
+      }`}
+      onClick={() => onSelect(method)}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className={`w-10 h-10 ${bgColors[borderColor] || 'bg-gray-100'} rounded-full flex items-center justify-center`}>
+            {icon}
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">{title}</div>
+            <div className="text-sm text-gray-500">{description}</div>
+          </div>
+        </div>
+        <div className={`w-4 h-4 rounded-full border-2 ${
+          isSelected 
+            ? `border-${borderColor}-500 bg-${borderColor}-500` 
+            : 'border-gray-300'
+        }`}>
+          {isSelected && (
+            <div className="w-full h-full rounded-full bg-white transform scale-50"></div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Order Summary Component
+const OrderSummary = ({ product, quantity, selectedColor, selectedStorage, totalPrice, currencySymbol, formatPrice }) => {
+  return (
+    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+      <div className="text-sm font-medium text-gray-900 mb-2">Order Summary</div>
+      <div className="text-sm space-y-1">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">{product?.name}</span>
+          <span className="font-medium">{currencySymbol}{formatPrice(totalPrice)}</span>
+        </div>
+        <div className="text-xs text-gray-500">
+          {selectedColor && `${selectedColor} • `}
+          {selectedStorage && `${selectedStorage} • `}
+          Qty: {quantity}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Quantity Controls Component
+const QuantityControls = ({ quantity, stockLeft, onDecrease, onIncrease }) => {
+  return (
+    <div className="flex items-center justify-center gap-4">
+      <span className="text-sm font-medium text-gray-700">Quantity:</span>
+      <div className="flex items-center bg-gray-100 rounded-full px-2 py-1">
+        <button
+          onClick={onDecrease}
+          disabled={quantity <= 1}
+          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <Minus className="w-4 h-4 text-black" />
+        </button>
+        <span className="text-base font-medium px-3 text-gray-900">{quantity}</span>
+        <button
+          onClick={onIncrease}
+          disabled={quantity >= stockLeft}
+          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <Plus className="w-4 h-4 text-black" />
+        </button>
+      </div>
+      <span className="text-xs text-gray-500">
+        ({stockLeft} available)
+      </span>
+    </div>
+  );
+};
+
+// Product Info Component
+const ProductInfo = ({ product, selectedColor, selectedStorage, selectedNetwork, selectedCondition, selectedColorImage, quantity, currencySymbol, formatPrice, unitPrice }) => {
+  return (
+    <div className="flex items-center gap-3">
+      <img 
+        src={selectedColorImage || product.image || "/placeholder.svg"}
+        alt={product.name || "Product"}
+        className="w-16 h-16 rounded-lg object-cover flex-shrink-0 shadow-sm"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-gray-900 text-base truncate">
+          {product.name}
+        </div>
+        <div className="text-sm text-gray-500 truncate">
+          {selectedColor && `${selectedColor} • `}
+          {selectedStorage && `${selectedStorage} • `}
+          {selectedNetwork && `${selectedNetwork} • `}
+          {selectedCondition && `${selectedCondition} • `}
+          Qty: {quantity}
+        </div>
+        <div className="text-lg font-bold text-orange-500 mt-1">
+          {currencySymbol}{formatPrice(unitPrice * quantity)}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Payment Dialog with payment method selection
 const MockPaymentDialog = ({ open, onOpenChange, product, quantity, totalPrice, selectedColor, selectedStorage, selectedNetwork, selectedCondition }) => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-  
+
   if (!open) return null;
-  
+
   const handlePayment = () => {
     if (!selectedPaymentMethod) {
       alert('Please select a payment method');
@@ -20,93 +149,53 @@ const MockPaymentDialog = ({ open, onOpenChange, product, quantity, totalPrice, 
     onOpenChange(false);
     setSelectedPaymentMethod('');
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
         <h3 className="text-lg font-semibold mb-4">Choose Payment Method</h3>
-        
-        {/* Order Summary */}
-        <div className="bg-gray-50 rounded-lg p-3 mb-6">
-          <div className="text-sm text-gray-600 mb-2">Order Summary</div>
-          <div className="text-sm space-y-1">
-            <div className="flex justify-between">
-              <span>{product?.name}</span>
-              <span>${totalPrice}</span>
-            </div>
-            <div className="text-xs text-gray-500">
-              {selectedColor} • {selectedStorage} • Qty: {quantity}
-            </div>
-          </div>
-        </div>
+
+        <OrderSummary 
+          product={product}
+          quantity={quantity}
+          selectedColor={selectedColor}
+          selectedStorage={selectedStorage}
+          totalPrice={totalPrice}
+          currencySymbol="$"
+          formatPrice={(price) => price.toFixed(2)}
+        />
 
         {/* Payment Methods */}
         <div className="space-y-3 mb-6">
-          <div 
-            className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-              selectedPaymentMethod === 'wallet' 
-                ? 'border-blue-500 bg-blue-50' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => setSelectedPaymentMethod('wallet')}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">Pay with Wallet</div>
-                  <div className="text-sm text-gray-500">Use your digital wallet</div>
-                </div>
-              </div>
-              <div className={`w-4 h-4 rounded-full border-2 ${
-                selectedPaymentMethod === 'wallet' 
-                  ? 'border-blue-500 bg-blue-500' 
-                  : 'border-gray-300'
-              }`}>
-                {selectedPaymentMethod === 'wallet' && (
-                  <div className="w-full h-full rounded-full bg-white transform scale-50"></div>
-                )}
-              </div>
-            </div>
-          </div>
+          <PaymentMethod
+            method="wallet"
+            isSelected={selectedPaymentMethod === 'wallet'}
+            onSelect={setSelectedPaymentMethod}
+            icon={
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            }
+            title="Pay with Wallet"
+            description="Use your digital wallet"
+            borderColor="blue"
+          />
 
-          <div 
-            className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-              selectedPaymentMethod === 'moncash' 
-                ? 'border-orange-500 bg-orange-50' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => setSelectedPaymentMethod('moncash')}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
-                  <img 
-                    src="/lovable-uploads/26276fb9-2443-4215-a6ae-d1d16e6c2f92.png" 
-                    alt="MonCash" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">Pay with Moncash</div>
-                  <div className="text-sm text-gray-500">Mobile money payment</div>
-                </div>
-              </div>
-              <div className={`w-4 h-4 rounded-full border-2 ${
-                selectedPaymentMethod === 'moncash' 
-                  ? 'border-orange-500 bg-orange-500' 
-                  : 'border-gray-300'
-              }`}>
-                {selectedPaymentMethod === 'moncash' && (
-                  <div className="w-full h-full rounded-full bg-white transform scale-50"></div>
-                )}
-              </div>
-            </div>
-          </div>
+          <PaymentMethod
+            method="moncash"
+            isSelected={selectedPaymentMethod === 'moncash'}
+            onSelect={setSelectedPaymentMethod}
+            icon={
+              <img 
+                src="/lovable-uploads/26276fb9-2443-4215-a6ae-d1d16e6c2f92.png" 
+                alt="MonCash" 
+                className="w-full h-full object-cover"
+              />
+            }
+            title="Pay with Moncash"
+            description="Mobile money payment"
+            borderColor="orange"
+          />
         </div>
 
         {/* Action Buttons */}
@@ -148,6 +237,7 @@ const StickyCheckoutBar = ({
   selectedNetwork,
   selectedCondition,
   selectedColorImage = null,
+  onAddToCart = () => {},
   onBuyNow = () => {},
   currentPrice = null,
   currentStock = null,
@@ -183,11 +273,6 @@ const StickyCheckoutBar = ({
     setIsExpanded(!isExpanded);
   };
 
-  // Flag component as fallback
-  const Flag = ({ country }) => (
-    <span className="text-xs bg-gray-200 px-1 py-0.5 rounded">{country.toUpperCase()}</span>
-  );
-
   // Use current stock from selected variant or product inventory
   const stockLeft = currentStock !== null ? currentStock : (product?.inventory || 0);
 
@@ -222,6 +307,28 @@ const StickyCheckoutBar = ({
   const discountAmount = totalOriginalPrice - totalPrice;
 
   // Action handlers
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      openAuthOverlay();
+      setIsExpanded(false);
+      return;
+    }
+    
+    if (typeof onAddToCart === 'function') {
+      onAddToCart({
+        product,
+        quantity,
+        selectedColor,
+        selectedStorage,
+        selectedNetwork,
+        selectedCondition,
+        price: unitPrice
+      });
+    }
+    
+    setIsExpanded(false);
+  };
+
   const handleBuyNow = () => {
     if (!isAuthenticated) {
       openAuthOverlay();
@@ -270,7 +377,7 @@ const StickyCheckoutBar = ({
         }
 
         const data = await response.json();
-        
+
         // Redirect to provided URL (redirectUrl preferred)
         const redirect = data.redirectUrl || data.paymentUrl || data.url;
         if (redirect) {
@@ -287,7 +394,7 @@ const StickyCheckoutBar = ({
     } else {
       alert(`Payment processed successfully with ${selectedPaymentMethod}!`);
     }
-    
+
     setIsExpanded(false);
     setShowPaymentMethods(false);
     setSelectedPaymentMethod('');
@@ -311,12 +418,19 @@ const StickyCheckoutBar = ({
       <div ref={barRef} className={`fixed bottom-0 left-0 right-0 z-[45] transition-all duration-300 ease-out ${className}`}>
         {/* Simple Proceed to Checkout Button */}
         {!isExpanded && (
-          <div className="p-3 bg-white border-t border-gray-200">
+          <div className="p-3 bg-white border-t border-gray-200 flex gap-2">
             <button 
-              onClick={toggleExpanded}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-semibold text-base hover:opacity-90 transition-opacity shadow-lg"
+              onClick={handleAddToCart}
+              className="flex-1 py-3 bg-white border border-gray-300 text-gray-800 rounded-full font-semibold text-base hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center gap-2"
             >
-              Proceed to Checkout
+              <ShoppingCart className="w-5 h-5" />
+              Add to Cart
+            </button>
+            <button 
+              onClick={handleBuyNow}
+              className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-semibold text-base hover:opacity-90 transition-opacity shadow-lg"
+            >
+              Checkout
             </button>
           </div>
         )}
@@ -336,152 +450,93 @@ const StickyCheckoutBar = ({
 
             {/* Product Info Section */}
             <div className="px-4 pb-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <img 
-                  src={selectedColorImage || product.image || "/placeholder.svg"}
-                  alt={product.name || "Product"}
-                  className="w-16 h-16 rounded-lg object-cover flex-shrink-0 shadow-sm"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 text-base truncate">
-                    {product.name}
-                  </div>
-                  <div className="text-sm text-gray-500 truncate">
-                    {selectedColor && `${selectedColor} • `}
-                    {selectedStorage && `${selectedStorage} • `}
-                    {selectedNetwork && `${selectedNetwork} • `}
-                    {selectedCondition && `${selectedCondition} • `}
-                    Qty: {quantity}
-                  </div>
-                  <div className="text-lg font-bold text-orange-500 mt-1">
-                    {currencies[currentCurrency]}{formatPrice(unitPrice * quantity)}
-                  </div>
-                </div>
-              </div>
+              <ProductInfo
+                product={product}
+                selectedColor={selectedColor}
+                selectedStorage={selectedStorage}
+                selectedNetwork={selectedNetwork}
+                selectedCondition={selectedCondition}
+                selectedColorImage={selectedColorImage}
+                quantity={quantity}
+                currencySymbol={currencies[currentCurrency]}
+                formatPrice={formatPrice}
+                unitPrice={unitPrice}
+              />
 
               {!showPaymentMethods ? (
                 <>
                   {/* Quantity Controls */}
-                  <div className="flex items-center justify-center gap-4">
-                    <span className="text-sm font-medium text-gray-700">Quantity:</span>
-                    <div className="flex items-center bg-gray-100 rounded-full px-2 py-1">
-                      <button
-                        onClick={decreaseQuantity}
-                        disabled={quantity <= 1}
-                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <Minus className="w-4 h-4 text-black" />
-                      </button>
-                      <span className="text-base font-medium px-3 text-gray-900">{quantity}</span>
-                      <button
-                        onClick={increaseQuantity}
-                        disabled={quantity >= stockLeft}
-                        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <Plus className="w-4 h-4 text-black" />
-                      </button>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      ({stockLeft} available)
-                    </span>
+                  <QuantityControls
+                    quantity={quantity}
+                    stockLeft={stockLeft}
+                    onDecrease={decreaseQuantity}
+                    onIncrease={increaseQuantity}
+                  />
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={handleAddToCart}
+                      className="flex-1 bg-white border border-gray-300 text-gray-800 py-3 rounded-full font-semibold text-base hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                      Add to Cart
+                    </button>
+                    <button 
+                      onClick={handleBuyNow}
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-full font-semibold text-base hover:opacity-90 flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      <CreditCard className="w-5 h-5" />
+                      Checkout
+                    </button>
                   </div>
-                  
-                  {/* Buy Now Button */}
-                  <button 
-                    onClick={handleBuyNow}
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-full font-semibold text-base hover:opacity-90 flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    Buy Now
-                  </button>
                 </>
               ) : (
                 <>
                   {/* Order Summary */}
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-sm font-medium text-gray-900 mb-2">Order Summary</div>
-                    <div className="text-sm space-y-1">
-                       <div className="flex justify-between items-center">
-                         <span className="text-gray-600">{product?.name}</span>
-                         <span className="font-medium">{currencies[currentCurrency]}{formatPrice(unitPrice * quantity)}</span>
-                       </div>
-                      <div className="text-xs text-gray-500">
-                        {selectedColor && `${selectedColor} • `}
-                        {selectedStorage && `${selectedStorage} • `}
-                        Qty: {quantity}
-                      </div>
-                    </div>
-                  </div>
+                  <OrderSummary
+                    product={product}
+                    quantity={quantity}
+                    selectedColor={selectedColor}
+                    selectedStorage={selectedStorage}
+                    totalPrice={unitPrice * quantity}
+                    currencySymbol={currencies[currentCurrency]}
+                    formatPrice={formatPrice}
+                  />
 
                   {/* Payment Methods */}
                   <div className="space-y-3">
                     <div className="text-sm font-medium text-gray-900 mb-2">Choose Payment Method</div>
-                    
-                    <div 
-                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                        selectedPaymentMethod === 'wallet' 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setSelectedPaymentMethod('wallet')}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900 text-sm">Pay with Wallet</div>
-                            <div className="text-xs text-gray-500">Use your digital wallet</div>
-                          </div>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border-2 ${
-                          selectedPaymentMethod === 'wallet' 
-                            ? 'border-blue-500 bg-blue-500' 
-                            : 'border-gray-300'
-                        }`}>
-                          {selectedPaymentMethod === 'wallet' && (
-                            <div className="w-full h-full rounded-full bg-white transform scale-50"></div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
 
-                    <div 
-                      className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                        selectedPaymentMethod === 'moncash' 
-                          ? 'border-orange-500 bg-orange-50' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setSelectedPaymentMethod('moncash')}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
-                            <img 
-                              src="/lovable-uploads/26276fb9-2443-4215-a6ae-d1d16e6c2f92.png" 
-                              alt="MonCash" 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900 text-sm">Pay with Moncash</div>
-                            <div className="text-xs text-gray-500">Mobile money payment</div>
-                          </div>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border-2 ${
-                          selectedPaymentMethod === 'moncash' 
-                            ? 'border-orange-500 bg-orange-500' 
-                            : 'border-gray-300'
-                        }`}>
-                          {selectedPaymentMethod === 'moncash' && (
-                            <div className="w-full h-full rounded-full bg-white transform scale-50"></div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <PaymentMethod
+                      method="wallet"
+                      isSelected={selectedPaymentMethod === 'wallet'}
+                      onSelect={setSelectedPaymentMethod}
+                      icon={
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                      }
+                      title="Pay with Wallet"
+                      description="Use your digital wallet"
+                      borderColor="blue"
+                    />
+
+                    <PaymentMethod
+                      method="moncash"
+                      isSelected={selectedPaymentMethod === 'moncash'}
+                      onSelect={setSelectedPaymentMethod}
+                      icon={
+                        <img 
+                          src="/lovable-uploads/26276fb9-2443-4215-a6ae-d1d16e6c2f92.png" 
+                          alt="MonCash" 
+                          className="w-full h-full object-cover"
+                        />
+                      }
+                      title="Pay with Moncash"
+                      description="Mobile money payment"
+                      borderColor="orange"
+                    />
                   </div>
 
                   {/* Continue Payment Button */}
