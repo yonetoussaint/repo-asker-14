@@ -490,8 +490,7 @@ const StickyCheckoutBar = ({
                 <>
                   {/* Payment Methods */}
                   <div className="space-y-3">
-                    <div className="text-sm font-medium text-gray-900 mb-2">Choose Payment Method</div>
-
+                    
                     <PaymentMethod
                       method="wallet"
                       isSelected={selectedPaymentMethod === 'wallet'}
