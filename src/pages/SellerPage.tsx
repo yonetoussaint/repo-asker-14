@@ -1,12 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomerReviewsEnhanced from '@/components/product/CustomerReviewsEnhanced';
 import ProductQA from '@/components/product/ProductQA';
 import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import SellerHeader from '@/components/product/SellerHeader';
-import SellerHeroBanner from '@/components/seller/SellerHeroBanner';
 import TabsNavigation from '@/components/home/TabsNavigation';
 import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,6 +51,117 @@ interface OnlineStatus {
   isOnline: boolean;
   lastSeen?: string;
 }
+
+// SellerHeader Component with ref forwarding
+interface SellerHeaderProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  seller: Seller;
+  isFollowing: boolean;
+  onFollow: () => void;
+  onMessage: () => void;
+  onShare: () => void;
+  customScrollProgress: number;
+  onlineStatus: OnlineStatus;
+  actionButtons: Array<{
+    Icon: React.ComponentType<any>;
+    active?: boolean;
+    onClick: () => void;
+    activeColor?: string;
+  }>;
+}
+
+const SellerHeader = forwardRef<HTMLDivElement, SellerHeaderProps>(
+  ({ activeTab, onTabChange, seller, isFollowing, onFollow, onMessage, onShare, customScrollProgress, onlineStatus, actionButtons }, ref) => {
+    return (
+      <header ref={ref} className="fixed top-0 left-0 right-0 z-50 bg-white border-b">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
+                {seller.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+              </div>
+              <div>
+                <h1 className="font-semibold text-sm">{seller.name}</h1>
+                <div className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${onlineStatus.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  <span className="text-xs text-muted-foreground">
+                    {onlineStatus.isOnline ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {actionButtons.map((button, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  size="icon"
+                  className={`h-9 w-9 ${button.active ? 'text-red-500' : ''}`}
+                  onClick={button.onClick}
+                  style={button.active ? { color: button.activeColor } : {}}
+                >
+                  <button.Icon className="w-5 h-5" />
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll progress indicator */}
+        <div className="w-full h-0.5 bg-gray-100">
+          <div 
+            className="h-full bg-primary transition-all duration-300" 
+            style={{ width: `${customScrollProgress}%` }}
+          />
+        </div>
+      </header>
+    );
+  }
+);
+
+// SellerHeroBanner Component with ref forwarding
+interface SellerHeroBannerProps {
+  seller: Seller;
+  onScrollProgress: (progress: number) => void;
+}
+
+const SellerHeroBanner = forwardRef<HTMLDivElement, SellerHeroBannerProps>(
+  ({ seller, onScrollProgress }, ref) => {
+    useEffect(() => {
+      const handleScroll = () => {
+        const scrollY = window.scrollY;
+        const banner = document.getElementById('seller-hero-banner');
+        if (!banner) return;
+        
+        const bannerHeight = banner.offsetHeight;
+        const progress = Math.min((scrollY / bannerHeight) * 100, 100);
+        onScrollProgress(progress);
+      };
+      
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, [onScrollProgress]);
+    
+    return (
+      <div ref={ref} id="seller-hero-banner" className="hero-banner relative h-64 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative container mx-auto px-4 h-full flex items-end pb-8">
+          <div className="flex items-end gap-4">
+            <div className="w-20 h-20 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center text-2xl font-bold">
+              {seller.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{seller.name}</h1>
+              <p className="text-white/80">{seller.description?.substring(0, 100)}...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
 
 // Profile Image Component
 const ProfileImage: React.FC<{ 
@@ -267,6 +376,29 @@ const ProductsTab: React.FC<{
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-[120px]">
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="popular">Popular</SelectItem>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="price-low">Price: Low to High</SelectItem>
+            <SelectItem value="price-high">Price: High to Low</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {filteredProducts.length === 0 ? (
         <div className="text-center py-12 bg-muted/20 rounded-lg">
@@ -327,7 +459,7 @@ const ProductsTab: React.FC<{
 // About Tab Component
 const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
   const [showAllAchievements, setShowAllAchievements] = useState(false);
-  
+
   const achievements = [
     { id: 1, title: "Top Seller", description: "Achieved over 1000 sales", icon: "🏆", earned: seller.total_sales > 1000 },
     { id: 2, title: "Quick Responder", description: "Responds within 2 hours", icon: "⚡", earned: true },
@@ -409,7 +541,7 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               <span className="text-muted-foreground">Followers</span>
               <span className="font-medium">{formatNumber(seller.followers_count || 0)}</span>
             </div>
-          </div>
+            </div>
         </Card>
 
         <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
@@ -600,7 +732,6 @@ const ReviewsTab: React.FC<{ seller: Seller }> = ({ seller }) => {
 };
 
 // Reels Tab Component
-// Reels Tab Component - Fixed to start directly after tabs navigation
 const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   const { data: reels = [], isLoading } = useSellerReels(sellerId);
 
@@ -734,7 +865,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
       toast.error("Please select a topic");
       return;
     }
-    
+
     toast.success("Message sent successfully! You'll receive a response within 2 hours.");
     setMessageText('');
     setSelectedTopic('');
@@ -787,7 +918,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               ✕
             </Button>
           </div>
-          
+
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Topic</label>
@@ -802,7 +933,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">Message</label>
               <textarea
@@ -816,7 +947,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                 {messageText.length}/500 characters
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <Button onClick={handleSendMessage} className="flex-1">
                 Send Message
@@ -856,7 +987,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                   <p className="text-sm font-medium">Phone</p>
                   <p className="text-sm text-muted-foreground">{seller.phone}</p>
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => window.open(`tel:${seller.phone}`)}>
+                <Button size="sm, variant="ghost" onClick={() => window.open(`tel:${seller.phone}`)}>
                   Call
                 </Button>
               </div>
@@ -881,7 +1012,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
             <Calendar className="w-4 h-4" />
             Business Hours & Response Times
           </h3>
-          
+
           <div className="space-y-3 mb-4">
             <div className="flex justify-between items-center py-2">
               <span className="text-sm">Monday - Friday</span>
@@ -997,7 +1128,7 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
         <h2 className="text-lg font-semibold">Shop by Category</h2>
         <span className="text-sm text-muted-foreground">{mockCategories.length} categories</span>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {mockCategories.map((category) => (
           <Card key={category.id} className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden border-0 shadow-sm">
@@ -1032,7 +1163,7 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
           </Card>
         ))}
       </div>
-      
+
       <Card className="p-6 bg-muted/20">
         <div className="text-center">
           <Package className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
@@ -1057,104 +1188,93 @@ const SellerPage: React.FC = () => {
   const tabsRef = useRef<HTMLDivElement>(null);  
   const mainContentRef = useRef<HTMLDivElement>(null);  
   const sellerInfoRef = useRef<HTMLDivElement>(null);
-  
+  const heroBannerRef = useRef<HTMLDivElement>(null);
+
   const [isFollowing, setIsFollowing] = useState(false);  
   const [activeTab, setActiveTab] = useState('products');  
   const [searchQuery, setSearchQuery] = useState('');  
   const [isTabsSticky, setIsTabsSticky] = useState(false);  
   const [tabsHeight, setTabsHeight] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  
+
   // Online status state - you would get this from your real-time data source  
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({  
     isOnline: true, // This would come from your WebSocket or polling  
     lastSeen: "2025-09-17T10:30:00Z" // ISO string from your backend  
   });  
-  
-  // Remove the general scroll-to-top effect since we handle it in tab change
-  // useEffect(() => {  
-  //   window.scrollTo({  
-  //     top: 0,  
-  //     behavior: 'smooth'
-  //   });  
-  // }, [activeTab]);  
-  
+
   // Handle case where sellerId is not provided  
   if (!sellerId) {  
     return <ErrorMessage message="Seller ID is required" />;  
   }  
-  
+
   // Hooks with error handling  
   const { data: seller, isLoading: sellerLoading, error: sellerError } = useSeller(sellerId);  
   const { data: products = [], isLoading: productsLoading, error: productsError } = useSellerProducts(sellerId);  
-  
+
   // Error handling  
   if (sellerError) {  
     return <ErrorMessage message="Failed to load seller information" />;  
   }  
-  
+
   if (productsError) {  
     return <ErrorMessage message="Failed to load products" />;  
   }  
-  
+
   // Improved scroll handling effect for sticky tabs  
   useEffect(() => {
     const handleScroll = () => {  
-      if (!headerRef.current || !tabsRef.current) return;  
-  
+      if (!headerRef.current || !tabsRef.current || !heroBannerRef.current) return;  
+
       const scrollY = window.scrollY;  
       const headerHeight = headerRef.current.offsetHeight;  
-      
+      const heroBannerHeight = heroBannerRef.current.offsetHeight;
+
       // Calculate the original position of tabs based on current tab
-      let originalTabsOffsetTop = 0;
-      
+      let originalTabsOffsetTop = heroBannerHeight;
+
       if (activeTab === 'products' && sellerInfoRef.current) {
-        // For products tab, tabs come after header + seller info + hero banner
+        // For products tab, tabs come after header + hero banner + seller info
         const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-        const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
-        originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
-      } else {
-        // For other tabs, tabs come right after header + hero banner
-        const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
-        originalTabsOffsetTop = heroBannerHeight;
+        originalTabsOffsetTop += sellerInfoHeight;
       }
-      
+
       // Store tabs height for spacer
       const currentTabsHeight = tabsRef.current.offsetHeight;
       if (currentTabsHeight !== tabsHeight) {
         setTabsHeight(currentTabsHeight);
       }
-      
+
       // Determine if tabs should be sticky
       // They become sticky when they would scroll past the header
       const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
-      
+
       // Only update state if it changed to prevent unnecessary re-renders
       if (shouldBeSticky !== isTabsSticky) {
         setIsTabsSticky(shouldBeSticky);
       }
     };  
-  
+
     // Use RAF for smoother scrolling performance
     let rafId: number;
     const throttledHandleScroll = () => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(handleScroll);
     };
-    
+
     // Initial setup with delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
       handleScroll(); // Set initial state
       window.addEventListener('scroll', throttledHandleScroll, { passive: true });
     }, 200);  
-  
+
     return () => {  
       clearTimeout(timeoutId);
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', throttledHandleScroll);  
     };  
   }, [activeTab, seller, isTabsSticky, tabsHeight]); // Include dependencies
-  
+
   // Example effect to simulate real-time online status updates  
   useEffect(() => {  
     // This is where you'd set up your WebSocket connection or polling  
@@ -1166,16 +1286,16 @@ const SellerPage: React.FC = () => {
         lastSeen: prev.isOnline ? new Date().toISOString() : prev.lastSeen  
       }));  
     }, 30000); // Update every 30 seconds  
-  
+
     return () => clearInterval(interval);  
   }, []);  
-  
+
   // Action handlers  
   const handleFollow = () => {  
     setIsFollowing(!isFollowing);  
     toast.success(isFollowing ? "Unfollowed" : "Following");  
   };  
-  
+
   const handleMessage = () => {  
     toast.info("Message feature coming soon");  
   };
@@ -1196,7 +1316,7 @@ const SellerPage: React.FC = () => {
   const handleScrollProgress = (progress: number) => {
     setScrollProgress(progress);
   };  
-  
+
   // Fixed tab change handler
   const handleTabChange = (newTab: string) => {  
     // If clicking on the currently active tab, scroll to top
@@ -1207,46 +1327,44 @@ const SellerPage: React.FC = () => {
       });
       return;
     }
-    
+
     // Otherwise, change to the new tab
     setActiveTab(newTab);  
-    
+
     // Scroll to top for new tab
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
-    
+
     // Reset sticky state immediately and recalculate after DOM updates
     setIsTabsSticky(false);
-    
+
     // Force recalculation after DOM updates
     setTimeout(() => {
-      if (headerRef.current && tabsRef.current) {
+      if (headerRef.current && tabsRef.current && heroBannerRef.current) {
         const scrollY = window.scrollY;
         const headerHeight = headerRef.current.offsetHeight;
-        let originalTabsOffsetTop = 0;
+        const heroBannerHeight = heroBannerRef.current.offsetHeight;
         
+        let originalTabsOffsetTop = heroBannerHeight;
+
         if (newTab === 'products' && sellerInfoRef.current) {
           const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-          const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
-          originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
-        } else {
-          const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
-          originalTabsOffsetTop = heroBannerHeight;
+          originalTabsOffsetTop += sellerInfoHeight;
         }
-        
+
         const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
         setIsTabsSticky(shouldBeSticky);
       }
-    }, 300); // Increased timeout to ensure DOM is fully updated
+    }, 300);
   };  
-  
+
   // Loading state  
   if (sellerLoading || !seller) {  
     return <LoadingSpinner />;  
   }  
-  
+
   const headerHeight = headerRef.current?.offsetHeight || 0;  
   const tabs = [  
     { id: 'products', label: 'Products' },  
@@ -1257,10 +1375,11 @@ const SellerPage: React.FC = () => {
     { id: 'qas', label: 'Q&A' },  
     { id: 'contact', label: 'Contact' },  
   ];
-  
+
   return (  
     <div className="min-h-screen bg-white">  
       <SellerHeader  
+        ref={headerRef}
         activeTab={activeTab}  
         onTabChange={handleTabChange}  
         seller={seller}
@@ -1283,9 +1402,10 @@ const SellerPage: React.FC = () => {
           }  
         ]}  
       />  
-  
+
       <main>  
         <SellerHeroBanner 
+          ref={heroBannerRef}
           seller={seller} 
           onScrollProgress={handleScrollProgress}
         />
@@ -1299,12 +1419,12 @@ const SellerPage: React.FC = () => {
             />  
           </div>
         )}  
-  
+
         <nav   
           ref={tabsRef}  
           className={`bg-white border-b transition-all duration-200 ease-out ${  
             isTabsSticky   
-              ? 'fixed top-0 left-0 right-0 z-40'   
+              ? 'fixed top-0 left-0 right-0 z-40 shadow-md'   
               : 'relative'  
           }`}  
           style={isTabsSticky ? { 
@@ -1318,7 +1438,7 @@ const SellerPage: React.FC = () => {
             onTabChange={handleTabChange}  
           />  
         </nav>  
-  
+
         {/* Spacer div when tabs are sticky to prevent content jumping */}  
         {isTabsSticky && (
           <div 
@@ -1326,7 +1446,7 @@ const SellerPage: React.FC = () => {
             style={{ height: `${tabsHeight}px` }} 
           />
         )}
-  
+
         <div   
           ref={mainContentRef}  
           className="container mx-auto px-4 py-6 tab-content-container"  
@@ -1340,27 +1460,27 @@ const SellerPage: React.FC = () => {
               navigate={navigate}  
             />  
           )}  
-  
+
           {activeTab === 'categories' && (  
             <CategoriesTab sellerId={sellerId} />  
           )}  
-  
+
           {activeTab === 'reels' && (  
             <ReelsTab sellerId={sellerId} />  
           )}  
-  
+
           {activeTab === 'about' && (  
             <AboutTab seller={seller} />  
           )}  
-  
+
           {activeTab === 'reviews' && (  
             <CustomerReviewsEnhanced productId={sellerId} limit={10} />  
           )}  
-   
+
           {activeTab === 'qas' && (  
             <ProductQA productId={sellerId} limit={10} />  
           )}  
-   
+
           {activeTab === 'contact' && (  
             <ContactTab seller={seller} />  
           )}
@@ -1370,4 +1490,4 @@ const SellerPage: React.FC = () => {
   );  
 };
 
-export default SellerPage
+export default SellerPage;
