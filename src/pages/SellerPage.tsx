@@ -987,7 +987,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                   <p className="text-sm font-medium">Phone</p>
                   <p className="text-sm text-muted-foreground">{seller.phone}</p>
                 </div>
-                <Button size="sm, variant="ghost" onClick={() => window.open(`tel:${seller.phone}`)}>
+                <Button size="sm" variant="ghost" onClick={() => window.open(`tel:${seller.phone}`)}>
                   Call
                 </Button>
               </div>
