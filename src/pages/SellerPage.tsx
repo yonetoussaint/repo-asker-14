@@ -1,12 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomerReviewsEnhanced from '@/components/product/CustomerReviewsEnhanced';
 import ProductQA from '@/components/product/ProductQA';
 import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import SellerHeader from '@/components/product/SellerHeader';
-import SellerHeroBanner from '@/components/seller/SellerHeroBanner';
 import TabsNavigation from '@/components/home/TabsNavigation';
 import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,6 +51,117 @@ interface OnlineStatus {
   isOnline: boolean;
   lastSeen?: string;
 }
+
+// SellerHeader Component with ref forwarding
+interface SellerHeaderProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  seller: Seller;
+  isFollowing: boolean;
+  onFollow: () => void;
+  onMessage: () => void;
+  onShare: () => void;
+  customScrollProgress: number;
+  onlineStatus: OnlineStatus;
+  actionButtons: Array<{
+    Icon: React.ComponentType<any>;
+    active?: boolean;
+    onClick: () => void;
+    activeColor?: string;
+  }>;
+}
+
+const SellerHeader = forwardRef<HTMLDivElement, SellerHeaderProps>(
+  ({ activeTab, onTabChange, seller, isFollowing, onFollow, onMessage, onShare, customScrollProgress, onlineStatus, actionButtons }, ref) => {
+    return (
+      <header ref={ref} className="fixed top-0 left-0 right-0 z-50 bg-white border-b">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
+                {seller.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+              </div>
+              <div>
+                <h1 className="font-semibold text-sm">{seller.name}</h1>
+                <div className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${onlineStatus.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  <span className="text-xs text-muted-foreground">
+                    {onlineStatus.isOnline ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {actionButtons.map((button, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  size="icon"
+                  className={`h-9 w-9 ${button.active ? 'text-red-500' : ''}`}
+                  onClick={button.onClick}
+                  style={button.active ? { color: button.activeColor } : {}}
+                >
+                  <button.Icon className="w-5 h-5" />
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll progress indicator */}
+        <div className="w-full h-0.5 bg-gray-100">
+          <div 
+            className="h-full bg-primary transition-all duration-300" 
+            style={{ width: `${customScrollProgress}%` }}
+          />
+        </div>
+      </header>
+    );
+  }
+);
+
+// SellerHeroBanner Component with ref forwarding
+interface SellerHeroBannerProps {
+  seller: Seller;
+  onScrollProgress: (progress: number) => void;
+}
+
+const SellerHeroBanner = forwardRef<HTMLDivElement, SellerHeroBannerProps>(
+  ({ seller, onScrollProgress }, ref) => {
+    useEffect(() => {
+      const handleScroll = () => {
+        const scrollY = window.scrollY;
+        const banner = document.getElementById('seller-hero-banner');
+        if (!banner) return;
+        
+        const bannerHeight = banner.offsetHeight;
+        const progress = Math.min((scrollY / bannerHeight) * 100, 100);
+        onScrollProgress(progress);
+      };
+      
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      return () => window.removeEventListener('scroll', handleScroll);
+    }, [onScrollProgress]);
+    
+    return (
+      <div ref={ref} id="seller-hero-banner" className="hero-banner relative h-64 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative container mx-auto px-4 h-full flex items-end pb-8">
+          <div className="flex items-end gap-4">
+            <div className="w-20 h-20 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center text-2xl font-bold">
+              {seller.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{seller.name}</h1>
+              <p className="text-white/80">{seller.description?.substring(0, 100)}...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
 
 // Profile Image Component
 const ProfileImage: React.FC<{ 
@@ -432,7 +541,7 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               <span className="text-muted-foreground">Followers</span>
               <span className="font-medium">{formatNumber(seller.followers_count || 0)}</span>
             </div>
-          </div>
+            </div>
         </Card>
 
         <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
@@ -999,7 +1108,7 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
       id: '3',
       name: 'Home & Garden',
       description: 'Furniture, decor, and outdoor items',
-      image_url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h-300&fit=crop',
+      image_url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
       product_count: 18,
       created_at: '2024-01-05T00:00:00Z'
     },
@@ -1007,7 +1116,7 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
       id: '4',
       name: 'Sports & Fitness',
       description: 'Equipment, apparel, and accessories',
-      image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h-300&fit=crop',
+      image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
       product_count: 12,
       created_at: '2024-01-01T00:00:00Z'
     }
@@ -1071,8 +1180,6 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   );
 };
 
-
-
 // Main SellerPage Component  
 const SellerPage: React.FC = () => {  
   const { sellerId } = useParams<{ sellerId: string }>();  
@@ -1114,63 +1221,59 @@ const SellerPage: React.FC = () => {
     return <ErrorMessage message="Failed to load products" />;  
   }  
 
-  const headerHeight = headerRef.current?.offsetHeight || 0;  
-
   // Improved scroll handling effect for sticky tabs  
-  // Fixed scroll handling effect for sticky tabs  
-useEffect(() => {
-  const handleScroll = () => {  
-    if (!headerRef.current || !tabsRef.current) return;  
+  useEffect(() => {
+    const handleScroll = () => {  
+      if (!headerRef.current || !tabsRef.current || !heroBannerRef.current) return;  
 
-    const scrollY = window.scrollY;  
-    const headerHeight = headerRef.current.offsetHeight;  
+      const scrollY = window.scrollY;  
+      const headerHeight = headerRef.current.offsetHeight;  
+      const heroBannerHeight = heroBannerRef.current.offsetHeight;
 
-    // Calculate the original position of tabs based on current tab
-    let originalTabsOffsetTop = headerHeight; // Start with header height
+      // Calculate the original position of tabs based on current tab
+      let originalTabsOffsetTop = heroBannerHeight;
 
-    if (activeTab === 'products') {
-      // For products tab, tabs come after header + hero banner + seller info
-      const heroBannerHeight = heroBannerRef.current?.offsetHeight || 0;
-      const sellerInfoHeight = sellerInfoRef.current?.offsetHeight || 0;
-      originalTabsOffsetTop += heroBannerHeight + sellerInfoHeight;
-    }
-    // For other tabs, tabs come right after header (already included in originalTabsOffsetTop)
+      if (activeTab === 'products' && sellerInfoRef.current) {
+        // For products tab, tabs come after header + hero banner + seller info
+        const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
+        originalTabsOffsetTop += sellerInfoHeight;
+      }
 
-    // Store tabs height for spacer
-    const currentTabsHeight = tabsRef.current.offsetHeight;
-    if (currentTabsHeight !== tabsHeight) {
-      setTabsHeight(currentTabsHeight);
-    }
+      // Store tabs height for spacer
+      const currentTabsHeight = tabsRef.current.offsetHeight;
+      if (currentTabsHeight !== tabsHeight) {
+        setTabsHeight(currentTabsHeight);
+      }
 
-    // Determine if tabs should be sticky
-    // They become sticky when they would scroll past the header bottom
-    const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
+      // Determine if tabs should be sticky
+      // They become sticky when they would scroll past the header
+      const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
 
-    // Only update state if it changed to prevent unnecessary re-renders
-    if (shouldBeSticky !== isTabsSticky) {
-      setIsTabsSticky(shouldBeSticky);
-    }
-  };  
+      // Only update state if it changed to prevent unnecessary re-renders
+      if (shouldBeSticky !== isTabsSticky) {
+        setIsTabsSticky(shouldBeSticky);
+      }
+    };  
 
-  // Use RAF for smoother scrolling performance
-  let rafId: number;
-  const throttledHandleScroll = () => {
-    cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(handleScroll);
-  };
+    // Use RAF for smoother scrolling performance
+    let rafId: number;
+    const throttledHandleScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(handleScroll);
+    };
 
-  // Initial setup with delay to ensure DOM is ready
-  const timeoutId = setTimeout(() => {
-    handleScroll(); // Set initial state
-    window.addEventListener('scroll', throttledHandleScroll, { passive: true });
-  }, 200);  
+    // Initial setup with delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      handleScroll(); // Set initial state
+      window.addEventListener('scroll', throttledHandleScroll, { passive: true });
+    }, 200);  
 
-  return () => {  
-    clearTimeout(timeoutId);
-    if (rafId) cancelAnimationFrame(rafId);
-    window.removeEventListener('scroll', throttledHandleScroll);  
-  };  
-}, [activeTab, seller, isTabsSticky, tabsHeight]);
+    return () => {  
+      clearTimeout(timeoutId);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', throttledHandleScroll);  
+    };  
+  }, [activeTab, seller, isTabsSticky, tabsHeight]); // Include dependencies
 
   // Example effect to simulate real-time online status updates  
   useEffect(() => {  
@@ -1239,19 +1342,19 @@ useEffect(() => {
 
     // Force recalculation after DOM updates
     setTimeout(() => {
-      if (headerRef.current && tabsRef.current) {
+      if (headerRef.current && tabsRef.current && heroBannerRef.current) {
         const scrollY = window.scrollY;
         const headerHeight = headerRef.current.offsetHeight;
+        const heroBannerHeight = heroBannerRef.current.offsetHeight;
+        
+        let originalTabsOffsetTop = heroBannerHeight;
 
-        let originalTabsOffsetTop = headerHeight;
-
-        if (newTab === 'products') {
-          const heroBannerHeight = heroBannerRef.current?.offsetHeight || 0;
-          const sellerInfoHeight = sellerInfoRef.current?.offsetHeight || 0;
-          originalTabsOffsetTop += heroBannerHeight + sellerInfoHeight;
+        if (newTab === 'products' && sellerInfoRef.current) {
+          const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
+          originalTabsOffsetTop += sellerInfoHeight;
         }
 
-        const shouldBeSticky = scrollY > (originalTabsOffsetTop - headerHeight);
+        const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
         setIsTabsSticky(shouldBeSticky);
       }
     }, 300);
@@ -1261,7 +1364,8 @@ useEffect(() => {
   if (sellerLoading || !seller) {  
     return <LoadingSpinner />;  
   }  
-  
+
+  const headerHeight = headerRef.current?.offsetHeight || 0;  
   const tabs = [  
     { id: 'products', label: 'Products' },  
     { id: 'categories', label: 'Categories' },  
@@ -1274,52 +1378,46 @@ useEffect(() => {
 
   return (  
     <div className="min-h-screen bg-white">  
-      <header 
+      <SellerHeader  
         ref={headerRef}
-        className="fixed top-0 left-0 right-0 z-50 bg-white"
-      >
-        <SellerHeader  
-          activeTab={activeTab}  
-          onTabChange={handleTabChange}  
-          seller={seller}
-          isFollowing={isFollowing}  
-          onFollow={handleFollow}  
-          onMessage={handleMessage}
-          onShare={handleShare}
-          customScrollProgress={scrollProgress}
-          onlineStatus={onlineStatus}
-          actionButtons={[  
-            {  
-              Icon: Heart,  
-              active: isFollowing,  
-              onClick: handleFollow,  
-              activeColor: "#f43f5e"  
-            },  
-            {  
-              Icon: Share,  
-              onClick: handleShare  
-            }  
-          ]}  
-        />
-      </header> 
+        activeTab={activeTab}  
+        onTabChange={handleTabChange}  
+        seller={seller}
+        isFollowing={isFollowing}  
+        onFollow={handleFollow}  
+        onMessage={handleMessage}
+        onShare={handleShare}
+        customScrollProgress={scrollProgress}
+        onlineStatus={onlineStatus}
+        actionButtons={[  
+          {  
+            Icon: Heart,  
+            active: isFollowing,  
+            onClick: handleFollow,  
+            activeColor: "#f43f5e"  
+          },  
+          {  
+            Icon: Share,  
+            onClick: handleShare  
+          }  
+        ]}  
+      />  
 
-      <main style={{ paddingTop: `${headerHeight}px` }}>  
-        {activeTab === 'products' && (
-          <>
-            <div ref={heroBannerRef}>
-              <SellerHeroBanner 
-                seller={seller} 
-                onScrollProgress={handleScrollProgress}
-              />
-            </div>
-            <div ref={sellerInfoRef}>
-              <SellerInfoSection   
-                seller={seller}   
-                products={products}   
-                onlineStatus={onlineStatus}  
-              />  
-            </div>
-          </>
+      <main>  
+        <SellerHeroBanner 
+          ref={heroBannerRef}
+          seller={seller} 
+          onScrollProgress={handleScrollProgress}
+        />
+
+        {activeTab === 'products' && (  
+          <div ref={sellerInfoRef}>
+            <SellerInfoSection   
+              seller={seller}   
+              products={products}   
+              onlineStatus={onlineStatus}  
+            />  
+          </div>
         )}  
 
         <nav   
