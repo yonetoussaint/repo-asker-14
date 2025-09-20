@@ -6,8 +6,9 @@ import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller'
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SellerHeader from '@/components/product/SellerHeader';
+import SellerHeroBanner from '@/components/seller/SellerHeroBanner';
 import TabsNavigation from '@/components/home/TabsNavigation';
-import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin } from 'lucide-react';
+import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -1062,6 +1063,7 @@ const SellerPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');  
   const [isTabsSticky, setIsTabsSticky] = useState(false);  
   const [tabsHeight, setTabsHeight] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
   
   // Online status state - you would get this from your real-time data source  
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({  
@@ -1183,6 +1185,23 @@ const SellerPage: React.FC = () => {
   
   const handleMessage = () => {  
     toast.info("Message feature coming soon");  
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: seller?.name || 'Check out this seller',
+        text: `Check out ${seller?.name || 'this seller'} on our platform!`,
+        url: window.location.href,
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard!");
+    }
+  };
+
+  const handleScrollProgress = (progress: number) => {
+    setScrollProgress(progress);
   };  
   
   // Fixed tab change handler
@@ -1245,33 +1264,36 @@ const SellerPage: React.FC = () => {
   
   return (  
     <div className="min-h-screen bg-white">  
-      <header   
-        ref={headerRef}  
-        className="fixed top-0 left-0 right-0 z-50 bg-white"  
-      >  
-        <SellerHeader  
-          activeTab={activeTab}  
-          onTabChange={handleTabChange}  
-          isFollowing={isFollowing}  
-          onFollow={handleFollow}  
-          onMessage={handleMessage}  
-          actionButtons={[  
-            {  
-              Icon: Heart,  
-              active: isFollowing,  
-              onClick: handleFollow,  
-              activeColor: "#f43f5e"  
-            },  
-            {  
-              Icon: MessageCircle,  
-              onClick: handleMessage  
-            }  
-          ]}  
-          forceScrolledState={true}  
-        />  
-      </header>  
+      <SellerHeader  
+        activeTab={activeTab}  
+        onTabChange={handleTabChange}  
+        seller={seller}
+        isFollowing={isFollowing}  
+        onFollow={handleFollow}  
+        onMessage={handleMessage}
+        onShare={handleShare}
+        customScrollProgress={scrollProgress}
+        onlineStatus={onlineStatus}
+        actionButtons={[  
+          {  
+            Icon: Heart,  
+            active: isFollowing,  
+            onClick: handleFollow,  
+            activeColor: "#f43f5e"  
+          },  
+          {  
+            Icon: Share,  
+            onClick: handleShare  
+          }  
+        ]}  
+      />  
   
-      <main style={{ paddingTop: headerHeight }}>  
+      <main>  
+        <SellerHeroBanner 
+          seller={seller} 
+          onScrollProgress={handleScrollProgress}
+        />
+
         {activeTab === 'products' && (  
           <div ref={sellerInfoRef}>
             <SellerInfoSection   
