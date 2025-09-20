@@ -48,69 +48,71 @@ const GalleryTabsContent: React.FC<GalleryTabsContentProps> = ({
 
   return (
     <div className="mt-1 w-full">
-      {activeTab === 'overview' && (
-        <div className="space-y-4">
-          <GalleryThumbnails
-            images={galleryItems.map(item => item.src)}
-            currentIndex={currentIndex}
-            onThumbnailClick={onThumbnailClick}
-            isPlaying={isPlaying}
-            videoIndices={videoIndices}
-            galleryItems={galleryItems}
+     {activeTab === 'overview' && (
+  <div className="space-y-4">
+    <GalleryThumbnails
+      images={galleryItems.map(item => item.src)}
+      currentIndex={currentIndex}
+      onThumbnailClick={onThumbnailClick}
+      isPlaying={isPlaying}
+      videoIndices={videoIndices}
+      galleryItems={galleryItems}
+    />
+
+    {/* Search Info Component moved to description's original position */}
+    {productId && (
+      <ProductSectionWrapper>
+        <SearchInfoComponent productId={productId} />
+      </ProductSectionWrapper>
+    )}
+
+    <ProductSectionWrapper>
+      <ReviewGallery />
+    </ProductSectionWrapper>
+
+    {/* Description Component moved before BookGenreFlashDeals */}
+    {product && product.description && (
+      <ProductSectionWrapper>
+        <div className="bg-gray-50 rounded-lg p-4">
+          <SectionHeader 
+            title="Description"
+            showViewAll={false}
+            className="mb-4"
           />
-          
-          {product && product.description && (
-            <ProductSectionWrapper>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <SectionHeader 
-                  title="Description"
-                  showViewAll={false}
-                  className="mb-4"
-                />
-                <p className="text-gray-600 leading-relaxed">{product.description}</p>
-              </div>
-            </ProductSectionWrapper>
-          )}
-
-          <ProductSectionWrapper>
-            <ReviewGallery />
-          </ProductSectionWrapper>
-
-          {productId && (
-            <ProductSectionWrapper>
-              <SearchInfoComponent productId={productId} />
-            </ProductSectionWrapper>
-          )}
-
-          <ProductSectionWrapper>
-            <BookGenreFlashDeals 
-              compact={true}
-              showHeader={true}
-              title="More Products"
-              className="border border-gray-200 rounded-lg overflow-hidden"
-              categories={[
-                { id: 'all', label: 'All' },
-                { id: 'related', label: 'Related' },
-                { id: 'similar', label: 'Similar' },
-                { id: 'bestsellers', label: 'Bestsellers' }
-              ]}
-            />
-          </ProductSectionWrapper>
-
-          {/* Sticky Checkout Bar for Overview Tab */}
-          {product && onBuyNow && (
-            <StickyCheckoutBar
-              product={product}
-              onBuyNow={onBuyNow}
-              selectedColor=""
-              selectedStorage=""
-              selectedNetwork=""
-              selectedCondition=""
-              className=""
-            />
-          )}
+          <p className="text-gray-600 leading-relaxed">{product.description}</p>
         </div>
-      )}
+      </ProductSectionWrapper>
+    )}
+
+    <ProductSectionWrapper>
+      <BookGenreFlashDeals 
+        compact={true}
+        showHeader={true}
+        title="More Products"
+        className="border border-gray-200 rounded-lg overflow-hidden"
+        categories={[
+          { id: 'all', label: 'All' },
+          { id: 'related', label: 'Related' },
+          { id: 'similar', label: 'Similar' },
+          { id: 'bestsellers', label: 'Bestsellers' }
+        ]}
+      />
+    </ProductSectionWrapper>
+
+    {/* Sticky Checkout Bar for Overview Tab */}
+    {product && onBuyNow && (
+      <StickyCheckoutBar
+        product={product}
+        onBuyNow={onBuyNow}
+        selectedColor=""
+        selectedStorage=""
+        selectedNetwork=""
+        selectedCondition=""
+        className=""
+      />
+    )}
+  </div>
+)}
 
       {activeTab === 'variants' && (
         <ProductSectionWrapper>
