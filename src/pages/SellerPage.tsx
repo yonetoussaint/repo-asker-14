@@ -1099,41 +1099,35 @@ const SellerPage: React.FC = () => {
   
   // Improved scroll handling effect for sticky tabs  
   useEffect(() => {
-    let originalTabsOffsetTop = 0;
-    
-    const calculateOriginalPosition = () => {
-      if (!headerRef.current || !tabsRef.current) return;
-      
-      // Calculate the original position of tabs in the document flow
-      const headerHeight = headerRef.current.offsetHeight;
-      
-      if (activeTab === 'products' && sellerInfoRef.current) {
-        // For products tab, tabs come after header + seller info
-        const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-        originalTabsOffsetTop = headerHeight + sellerInfoHeight;
-      } else {
-        // For other tabs, tabs come right after header
-        originalTabsOffsetTop = headerHeight;
-      }
-    };
-    
     const handleScroll = () => {  
       if (!headerRef.current || !tabsRef.current) return;  
   
       const scrollY = window.scrollY;  
       const headerHeight = headerRef.current.offsetHeight;  
       
-      // Recalculate original position (in case content changed)
-      calculateOriginalPosition();
+      // Calculate the original position of tabs based on current tab
+      let originalTabsOffsetTop = 0;
+      
+      if (activeTab === 'products' && sellerInfoRef.current) {
+        // For products tab, tabs come after header + seller info + hero banner
+        const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
+        const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
+        originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
+      } else {
+        // For other tabs, tabs come right after header + hero banner
+        const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
+        originalTabsOffsetTop = heroBannerHeight;
+      }
       
       // Store tabs height for spacer
-      if (tabsRef.current.offsetHeight !== tabsHeight) {
-        setTabsHeight(tabsRef.current.offsetHeight);
+      const currentTabsHeight = tabsRef.current.offsetHeight;
+      if (currentTabsHeight !== tabsHeight) {
+        setTabsHeight(currentTabsHeight);
       }
       
       // Determine if tabs should be sticky
       // They become sticky when they would scroll past the header
-      const shouldBeSticky = scrollY > (originalTabsOffsetTop - headerHeight);
+      const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
       
       // Only update state if it changed to prevent unnecessary re-renders
       if (shouldBeSticky !== isTabsSticky) {
@@ -1148,16 +1142,15 @@ const SellerPage: React.FC = () => {
       rafId = requestAnimationFrame(handleScroll);
     };
     
-    // Initial calculation and setup
+    // Initial setup with delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
-      calculateOriginalPosition();
       handleScroll(); // Set initial state
       window.addEventListener('scroll', throttledHandleScroll, { passive: true });
-    }, 100);  
+    }, 200);  
   
     return () => {  
       clearTimeout(timeoutId);
-      cancelAnimationFrame(rafId);
+      if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', throttledHandleScroll);  
     };  
   }, [activeTab, seller, isTabsSticky, tabsHeight]); // Include dependencies
@@ -1217,8 +1210,6 @@ const SellerPage: React.FC = () => {
     
     // Otherwise, change to the new tab
     setActiveTab(newTab);  
-    // Reset sticky state when changing tabs to recalculate positions
-    setIsTabsSticky(false);
     
     // Scroll to top for new tab
     window.scrollTo({
@@ -1226,7 +1217,10 @@ const SellerPage: React.FC = () => {
       behavior: 'smooth'
     });
     
-    // Force recalculation after state update
+    // Reset sticky state immediately and recalculate after DOM updates
+    setIsTabsSticky(false);
+    
+    // Force recalculation after DOM updates
     setTimeout(() => {
       if (headerRef.current && tabsRef.current) {
         const scrollY = window.scrollY;
@@ -1235,15 +1229,17 @@ const SellerPage: React.FC = () => {
         
         if (newTab === 'products' && sellerInfoRef.current) {
           const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-          originalTabsOffsetTop = headerHeight + sellerInfoHeight;
+          const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
+          originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
         } else {
-          originalTabsOffsetTop = headerHeight;
+          const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
+          originalTabsOffsetTop = heroBannerHeight;
         }
         
-        const shouldBeSticky = scrollY > (originalTabsOffsetTop - headerHeight);
+        const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
         setIsTabsSticky(shouldBeSticky);
       }
-    }, 50);
+    }, 300); // Increased timeout to ensure DOM is fully updated
   };  
   
   // Loading state  
