@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Heart, MessageCircle, Search, ChevronRight, Share, CheckCircle } from "lucide-react";
+import { Heart, MessageCircle, Search, ChevronRight, Share, CheckCircle, ShoppingCart, MoreHorizontal } from "lucide-react";
 import { useScrollProgress } from "./header/useScrollProgress";
 import BackButton from "./header/BackButton";
 import HeaderActionButton from "./header/HeaderActionButton";
@@ -8,6 +8,8 @@ import { useNavigationLoading } from '@/hooks/useNavigationLoading';
 import SearchPageSkeleton from '@/components/search/SearchPageSkeleton';
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import SearchBar from "./header/SearchBar";
+
 
 interface ActionButton {
   Icon: any;
@@ -36,7 +38,7 @@ interface SellerHeaderProps {
   onlineStatus?: OnlineStatus;
 }
 
-const SellerHeader: React.FC<SellerHeaderProps> = ({ 
+const SellerHeader = React.forwardRef<HTMLDivElement, SellerHeaderProps>(({ 
   activeTab = "products", 
   onTabChange,
   forceScrolledState = false,
@@ -48,7 +50,7 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
   onShare,
   customScrollProgress,
   onlineStatus
-}) => {
+}, ref) => {
   const { progress: internalProgress } = useScrollProgress();
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
@@ -56,9 +58,16 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
 
   // Use custom progress if provided, otherwise use internal progress
   const progress = customScrollProgress !== undefined ? customScrollProgress : internalProgress;
-  
-  // Use forced state or actual scroll progress
-  const displayProgress = forceScrolledState ? 1 : progress;
+
+  // Calculate display progress with gradual transition for forced state
+  const displayProgress = React.useMemo(() => {
+    if (forceScrolledState) {
+      // Gradual transition from current progress to 1 over time
+      return Math.min(1, Math.max(progress, 0.8)); // Ensure minimum 0.8 progress when forced
+    }
+    return progress;
+  }, [forceScrolledState, progress]);
+
 
   if (isLoading) {
     return <SearchPageSkeleton />;
@@ -66,7 +75,7 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
 
   const getStatusText = () => {
     if (!onlineStatus) return null;
-    
+
     if (onlineStatus.isOnline) return "Online now";
     if (onlineStatus.lastSeen) {
       const now = new Date();
@@ -83,6 +92,7 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
 
   return (
     <div 
+      ref={ref}
       id="seller-header"
       className="fixed top-0 left-0 right-0 z-30 flex flex-col transition-all duration-300"
     >
@@ -101,84 +111,114 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
 
             {/* Seller info when scrolled */}
             {displayProgress >= 0.5 && seller && (
-              <div className="flex items-center gap-2">
+              <div 
+              className="flex items-center gap-3 transition-all duration-300 ease-out"
+              style={{
+                opacity: displayProgress,
+                transform: `translateX(${(1 - displayProgress) * -20}px)`
+              }}
+            >
+              <div className="relative transition-transform duration-300 ease-out">
                 <img
                   src={seller.profile_image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"}
                   alt={seller.name}
                   className="w-8 h-8 rounded-full object-cover border"
                 />
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold text-gray-900 truncate max-w-32">
-                      {seller.name}
-                    </span>
-                    {seller.verified && (
-                      <CheckCircle className="w-3 h-3 text-blue-500 fill-current" />
-                    )}
-                  </div>
-                  {onlineStatus && (
-                    <div className="flex items-center gap-1">
-                      <div className={`w-2 h-2 rounded-full ${onlineStatus.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className={`text-xs ${onlineStatus.isOnline ? 'text-green-600' : 'text-muted-foreground'}`}>
-                        {getStatusText()}
-                      </span>
-                    </div>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-semibold text-gray-900 truncate max-w-32 transition-opacity duration-300 ease-out">
+                    {seller.name}
+                  </span>
+                  {seller.verified && (
+                    <CheckCircle className="w-3 h-3 text-blue-500 fill-current" />
                   )}
                 </div>
+                {onlineStatus && (
+                  <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${onlineStatus.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    <span className={`text-xs ${onlineStatus.isOnline ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      {getStatusText()}
+                    </span>
+                  </div>
+                )}
               </div>
+            </div>
             )}
           </div>
 
-          {/* Center - Search bar when scrolled */}
+          {/* Center - Search icon only in second state */}
           <div className="flex-1 mx-4">
-            {displayProgress >= 0.5 && (
-              <div className="flex-1 relative max-w-md mx-auto">
-                <input
-                  type="text"
-                  placeholder="Search seller products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onClick={() => {
-                    startLoading();
-                    navigate(`/search${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`);
-                  }}
-                  className="w-full px-3 py-1 text-sm font-medium border-2 border-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all duration-300 bg-white shadow-sm cursor-pointer"
-                  readOnly
-                />
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-600 font-bold" />
-              </div>
-            )}
+            <div className="flex justify-center">
+              <HeaderActionButton
+                Icon={Search}
+                onClick={() => {
+                  startLoading();
+                  navigate('/search');
+                }}
+                progress={displayProgress}
+              />
+            </div>
           </div>
 
           {/* Right side - Action buttons */}
-          <div className="flex gap-2 flex-shrink-0">
+          <div 
+            className="flex items-center gap-2 transition-all duration-300 ease-out"
+            style={{
+              opacity: displayProgress,
+              transform: `translateX(${(1 - displayProgress) * 20}px)`
+            }}
+          >
             {actionButtons ? (
               actionButtons.map((button, index) => (
-                <HeaderActionButton 
+                <div 
                   key={index}
-                  Icon={button.Icon} 
-                  active={button.active} 
-                  onClick={button.onClick} 
-                  progress={displayProgress} 
-                  activeColor={button.activeColor}
-                  likeCount={button.count}
-                  shareCount={button.count}
-                />
+                  className="transition-all duration-300 ease-out"
+                  style={{
+                    transform: `scale(${0.9 + (displayProgress * 0.1)})`,
+                    transitionDelay: `${index * 50}ms`
+                  }}
+                >
+                  <HeaderActionButton 
+                    key={index}
+                    Icon={button.Icon} 
+                    active={button.active} 
+                    onClick={button.onClick} 
+                    progress={displayProgress} 
+                    activeColor={button.activeColor}
+                    likeCount={button.count}
+                    shareCount={button.count}
+                  />
+                </div>
               ))
             ) : (
               <>
-                <HeaderActionButton 
-                  Icon={Heart} 
-                  active={isFollowing} 
-                  onClick={onFollow} 
-                  progress={displayProgress} 
-                  activeColor="#f43f5e"
-                />
-                <HeaderActionButton 
-                  Icon={Share} 
-                  progress={displayProgress}
-                  onClick={onShare}
-                />
+                <div 
+                  className="transition-all duration-300 ease-out"
+                  style={{
+                    transform: `scale(${0.9 + (displayProgress * 0.1)})`
+                  }}
+                >
+                  <HeaderActionButton 
+                    Icon={Heart} 
+                    active={isFollowing} 
+                    onClick={onFollow} 
+                    progress={displayProgress} 
+                    activeColor="#f43f5e"
+                  />
+                </div>
+                <div 
+                  className="transition-all duration-300 ease-out"
+                  style={{
+                    transform: `scale(${0.9 + (displayProgress * 0.1)})`
+                  }}
+                >
+                  <HeaderActionButton 
+                    Icon={Share} 
+                    progress={displayProgress}
+                    onClick={onShare}
+                  />
+                </div>
               </>
             )}
           </div>
@@ -186,6 +226,8 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
       </div>
     </div>
   );
-};
+});
+
+SellerHeader.displayName = 'SellerHeader';
 
 export default SellerHeader;
