@@ -1272,18 +1272,22 @@ useEffect(() => {
     { id: 'contact', label: 'Contact' },  
   ];
 
-         return (  
+  return (  
     <div className="min-h-screen bg-white">  
-      <header   
-        ref={headerRef}  
-        className="fixed top-0 left-0 right-0 z-50 bg-white"  
-      >  
+      <header 
+        ref={headerRef}
+        className="fixed top-0 left-0 right-0 z-50 bg-white"
+      >
         <SellerHeader  
           activeTab={activeTab}  
           onTabChange={handleTabChange}  
+          seller={seller}
           isFollowing={isFollowing}  
           onFollow={handleFollow}  
-          onMessage={handleMessage}  
+          onMessage={handleMessage}
+          onShare={handleShare}
+          customScrollProgress={scrollProgress}
+          onlineStatus={onlineStatus}
           actionButtons={[  
             {  
               Icon: Heart,  
@@ -1292,30 +1296,37 @@ useEffect(() => {
               activeColor: "#f43f5e"  
             },  
             {  
-              Icon: MessageCircle,  
-              onClick: handleMessage  
+              Icon: Share,  
+              onClick: handleShare  
             }  
           ]}  
-          forceScrolledState={true}  
-        />  
-      </header>  
+        />
+      </header> 
 
-      <main style={{ paddingTop: headerHeight }}>  
-        {activeTab === 'products' && (  
-          <div ref={sellerInfoRef}>
-            <SellerInfoSection   
-              seller={seller}   
-              products={products}   
-              onlineStatus={onlineStatus}  
-            />  
-          </div>
+      <main style={{ paddingTop: `${headerHeight}px` }}>  
+        {activeTab === 'products' && (
+          <>
+            <div ref={heroBannerRef}>
+              <SellerHeroBanner 
+                seller={seller} 
+                onScrollProgress={handleScrollProgress}
+              />
+            </div>
+            <div ref={sellerInfoRef}>
+              <SellerInfoSection   
+                seller={seller}   
+                products={products}   
+                onlineStatus={onlineStatus}  
+              />  
+            </div>
+          </>
         )}  
 
         <nav   
           ref={tabsRef}  
           className={`bg-white border-b transition-all duration-200 ease-out ${  
             isTabsSticky   
-              ? 'fixed top-0 left-0 right-0 z-40'   
+              ? 'fixed top-0 left-0 right-0 z-40 shadow-md'   
               : 'relative'  
           }`}  
           style={isTabsSticky ? { 
@@ -1381,4 +1392,4 @@ useEffect(() => {
   );  
 };
 
-export default SellerPage
+export default SellerPage;
