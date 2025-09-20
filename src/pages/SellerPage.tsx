@@ -1117,58 +1117,60 @@ const SellerPage: React.FC = () => {
   const headerHeight = headerRef.current?.offsetHeight || 0;  
 
   // Improved scroll handling effect for sticky tabs  
-  useEffect(() => {
-    const handleScroll = () => {  
-      if (!headerRef.current || !tabsRef.current) return;  
+  // Fixed scroll handling effect for sticky tabs  
+useEffect(() => {
+  const handleScroll = () => {  
+    if (!headerRef.current || !tabsRef.current) return;  
 
-      const scrollY = window.scrollY;  
-      const headerHeight = headerRef.current.offsetHeight;  
+    const scrollY = window.scrollY;  
+    const headerHeight = headerRef.current.offsetHeight;  
 
-      // Calculate the original position of tabs based on current tab
-      let originalTabsOffsetTop = headerHeight;
+    // Calculate the original position of tabs based on current tab
+    let originalTabsOffsetTop = headerHeight; // Start with header height
 
-      if (activeTab === 'products') {
-        // For products tab, tabs come after header + hero banner + seller info
-        const heroBannerHeight = heroBannerRef.current?.offsetHeight || 0;
-        const sellerInfoHeight = sellerInfoRef.current?.offsetHeight || 0;
-        originalTabsOffsetTop += heroBannerHeight + sellerInfoHeight;
-      } 
+    if (activeTab === 'products') {
+      // For products tab, tabs come after header + hero banner + seller info
+      const heroBannerHeight = heroBannerRef.current?.offsetHeight || 0;
+      const sellerInfoHeight = sellerInfoRef.current?.offsetHeight || 0;
+      originalTabsOffsetTop += heroBannerHeight + sellerInfoHeight;
+    }
+    // For other tabs, tabs come right after header (already included in originalTabsOffsetTop)
 
-      // Store tabs height for spacer
-      const currentTabsHeight = tabsRef.current.offsetHeight;
-      if (currentTabsHeight !== tabsHeight) {
-        setTabsHeight(currentTabsHeight);
-      }
+    // Store tabs height for spacer
+    const currentTabsHeight = tabsRef.current.offsetHeight;
+    if (currentTabsHeight !== tabsHeight) {
+      setTabsHeight(currentTabsHeight);
+    }
 
-      // Determine if tabs should be sticky
-      // They become sticky when they would scroll past the header
-      const shouldBeSticky = scrollY > (originalTabsOffsetTop - headerHeight);
+    // Determine if tabs should be sticky
+    // They become sticky when they would scroll past the header bottom
+    const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
 
-      // Only update state if it changed to prevent unnecessary re-renders
-      if (shouldBeSticky !== isTabsSticky) {
-        setIsTabsSticky(shouldBeSticky);
-      }
-    };  
+    // Only update state if it changed to prevent unnecessary re-renders
+    if (shouldBeSticky !== isTabsSticky) {
+      setIsTabsSticky(shouldBeSticky);
+    }
+  };  
 
-    // Use RAF for smoother scrolling performance
-    let rafId: number;
-    const throttledHandleScroll = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(handleScroll);
-    };
+  // Use RAF for smoother scrolling performance
+  let rafId: number;
+  const throttledHandleScroll = () => {
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(handleScroll);
+  };
 
-    // Initial setup with delay to ensure DOM is ready
-    const timeoutId = setTimeout(() => {
-      handleScroll(); // Set initial state
-      window.addEventListener('scroll', throttledHandleScroll, { passive: true });
-    }, 200);  
+  // Initial setup with delay to ensure DOM is ready
+  const timeoutId = setTimeout(() => {
+    handleScroll(); // Set initial state
+    window.addEventListener('scroll', throttledHandleScroll, { passive: true });
+  }, 200);  
 
-    return () => {  
-      clearTimeout(timeoutId);
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', throttledHandleScroll);  
-    };  
-  }, [activeTab, seller, isTabsSticky, tabsHeight]); // Include dependencies
+  return () => {  
+    clearTimeout(timeoutId);
+    if (rafId) cancelAnimationFrame(rafId);
+    window.removeEventListener('scroll', throttledHandleScroll);  
+  };  
+}, [activeTab, seller, isTabsSticky, tabsHeight]);
 
   // Example effect to simulate real-time online status updates  
   useEffect(() => {  
