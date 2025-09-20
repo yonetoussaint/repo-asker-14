@@ -6,9 +6,8 @@ import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller'
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SellerHeader from '@/components/product/SellerHeader';
-import SellerHeroBanner from '@/components/seller/SellerHeroBanner';
 import TabsNavigation from '@/components/home/TabsNavigation';
-import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin, Share } from 'lucide-react';
+import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -1063,7 +1062,6 @@ const SellerPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');  
   const [isTabsSticky, setIsTabsSticky] = useState(false);  
   const [tabsHeight, setTabsHeight] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
   
   // Online status state - you would get this from your real-time data source  
   const [onlineStatus, setOnlineStatus] = useState<OnlineStatus>({  
@@ -1099,35 +1097,41 @@ const SellerPage: React.FC = () => {
   
   // Improved scroll handling effect for sticky tabs  
   useEffect(() => {
+    let originalTabsOffsetTop = 0;
+    
+    const calculateOriginalPosition = () => {
+      if (!headerRef.current || !tabsRef.current) return;
+      
+      // Calculate the original position of tabs in the document flow
+      const headerHeight = headerRef.current.offsetHeight;
+      
+      if (activeTab === 'products' && sellerInfoRef.current) {
+        // For products tab, tabs come after header + seller info
+        const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
+        originalTabsOffsetTop = headerHeight + sellerInfoHeight;
+      } else {
+        // For other tabs, tabs come right after header
+        originalTabsOffsetTop = headerHeight;
+      }
+    };
+    
     const handleScroll = () => {  
       if (!headerRef.current || !tabsRef.current) return;  
   
       const scrollY = window.scrollY;  
       const headerHeight = headerRef.current.offsetHeight;  
       
-      // Calculate the original position of tabs based on current tab
-      let originalTabsOffsetTop = 0;
-      
-      if (activeTab === 'products' && sellerInfoRef.current) {
-        // For products tab, tabs come after header + seller info + hero banner
-        const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-        const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
-        originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
-      } else {
-        // For other tabs, tabs come right after header + hero banner
-        const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
-        originalTabsOffsetTop = heroBannerHeight;
-      }
+      // Recalculate original position (in case content changed)
+      calculateOriginalPosition();
       
       // Store tabs height for spacer
-      const currentTabsHeight = tabsRef.current.offsetHeight;
-      if (currentTabsHeight !== tabsHeight) {
-        setTabsHeight(currentTabsHeight);
+      if (tabsRef.current.offsetHeight !== tabsHeight) {
+        setTabsHeight(tabsRef.current.offsetHeight);
       }
       
       // Determine if tabs should be sticky
       // They become sticky when they would scroll past the header
-      const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
+      const shouldBeSticky = scrollY > (originalTabsOffsetTop - headerHeight);
       
       // Only update state if it changed to prevent unnecessary re-renders
       if (shouldBeSticky !== isTabsSticky) {
@@ -1142,15 +1146,16 @@ const SellerPage: React.FC = () => {
       rafId = requestAnimationFrame(handleScroll);
     };
     
-    // Initial setup with delay to ensure DOM is ready
+    // Initial calculation and setup
     const timeoutId = setTimeout(() => {
+      calculateOriginalPosition();
       handleScroll(); // Set initial state
       window.addEventListener('scroll', throttledHandleScroll, { passive: true });
-    }, 200);  
+    }, 100);  
   
     return () => {  
       clearTimeout(timeoutId);
-      if (rafId) cancelAnimationFrame(rafId);
+      cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', throttledHandleScroll);  
     };  
   }, [activeTab, seller, isTabsSticky, tabsHeight]); // Include dependencies
@@ -1178,23 +1183,6 @@ const SellerPage: React.FC = () => {
   
   const handleMessage = () => {  
     toast.info("Message feature coming soon");  
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: seller?.name || 'Check out this seller',
-        text: `Check out ${seller?.name || 'this seller'} on our platform!`,
-        url: window.location.href,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Link copied to clipboard!");
-    }
-  };
-
-  const handleScrollProgress = (progress: number) => {
-    setScrollProgress(progress);
   };  
   
   // Fixed tab change handler
@@ -1210,6 +1198,8 @@ const SellerPage: React.FC = () => {
     
     // Otherwise, change to the new tab
     setActiveTab(newTab);  
+    // Reset sticky state when changing tabs to recalculate positions
+    setIsTabsSticky(false);
     
     // Scroll to top for new tab
     window.scrollTo({
@@ -1217,10 +1207,7 @@ const SellerPage: React.FC = () => {
       behavior: 'smooth'
     });
     
-    // Reset sticky state immediately and recalculate after DOM updates
-    setIsTabsSticky(false);
-    
-    // Force recalculation after DOM updates
+    // Force recalculation after state update
     setTimeout(() => {
       if (headerRef.current && tabsRef.current) {
         const scrollY = window.scrollY;
@@ -1229,17 +1216,15 @@ const SellerPage: React.FC = () => {
         
         if (newTab === 'products' && sellerInfoRef.current) {
           const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-          const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
-          originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
+          originalTabsOffsetTop = headerHeight + sellerInfoHeight;
         } else {
-          const heroBannerHeight = document.querySelector('.hero-banner')?.offsetHeight || 0;
-          originalTabsOffsetTop = heroBannerHeight;
+          originalTabsOffsetTop = headerHeight;
         }
         
-        const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
+        const shouldBeSticky = scrollY > (originalTabsOffsetTop - headerHeight);
         setIsTabsSticky(shouldBeSticky);
       }
-    }, 300); // Increased timeout to ensure DOM is fully updated
+    }, 50);
   };  
   
   // Loading state  
@@ -1260,36 +1245,33 @@ const SellerPage: React.FC = () => {
   
   return (  
     <div className="min-h-screen bg-white">  
-      <SellerHeader  
-        activeTab={activeTab}  
-        onTabChange={handleTabChange}  
-        seller={seller}
-        isFollowing={isFollowing}  
-        onFollow={handleFollow}  
-        onMessage={handleMessage}
-        onShare={handleShare}
-        customScrollProgress={scrollProgress}
-        onlineStatus={onlineStatus}
-        actionButtons={[  
-          {  
-            Icon: Heart,  
-            active: isFollowing,  
-            onClick: handleFollow,  
-            activeColor: "#f43f5e"  
-          },  
-          {  
-            Icon: Share,  
-            onClick: handleShare  
-          }  
-        ]}  
-      />  
+      <header   
+        ref={headerRef}  
+        className="fixed top-0 left-0 right-0 z-50 bg-white"  
+      >  
+        <SellerHeader  
+          activeTab={activeTab}  
+          onTabChange={handleTabChange}  
+          isFollowing={isFollowing}  
+          onFollow={handleFollow}  
+          onMessage={handleMessage}  
+          actionButtons={[  
+            {  
+              Icon: Heart,  
+              active: isFollowing,  
+              onClick: handleFollow,  
+              activeColor: "#f43f5e"  
+            },  
+            {  
+              Icon: MessageCircle,  
+              onClick: handleMessage  
+            }  
+          ]}  
+          forceScrolledState={true}  
+        />  
+      </header>  
   
-      <main>  
-        <SellerHeroBanner 
-          seller={seller} 
-          onScrollProgress={handleScrollProgress}
-        />
-
+      <main style={{ paddingTop: headerHeight }}>  
         {activeTab === 'products' && (  
           <div ref={sellerInfoRef}>
             <SellerInfoSection   
