@@ -5,6 +5,8 @@ import ProductQA from '@/components/product/ProductQA';
 import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import SellerHeader from '@/components/product/SellerHeader';
+import SellerHeroBanner from '@/components/seller/SellerHeroBanner';
 import TabsNavigation from '@/components/home/TabsNavigation';
 import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,117 +53,6 @@ interface OnlineStatus {
   isOnline: boolean;
   lastSeen?: string;
 }
-
-// SellerHeader Component with ref forwarding
-interface SellerHeaderProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  seller: Seller;
-  isFollowing: boolean;
-  onFollow: () => void;
-  onMessage: () => void;
-  onShare: () => void;
-  customScrollProgress: number;
-  onlineStatus: OnlineStatus;
-  actionButtons: Array<{
-    Icon: React.ComponentType<any>;
-    active?: boolean;
-    onClick: () => void;
-    activeColor?: string;
-  }>;
-}
-
-const SellerHeader = forwardRef<HTMLDivElement, SellerHeaderProps>(
-  ({ activeTab, onTabChange, seller, isFollowing, onFollow, onMessage, onShare, customScrollProgress, onlineStatus, actionButtons }, ref) => {
-    return (
-      <header ref={ref} className="fixed top-0 left-0 right-0 z-50 bg-white border-b">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
-                {seller.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
-              </div>
-              <div>
-                <h1 className="font-semibold text-sm">{seller.name}</h1>
-                <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${onlineStatus.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                  <span className="text-xs text-muted-foreground">
-                    {onlineStatus.isOnline ? 'Online' : 'Offline'}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              {actionButtons.map((button, index) => (
-                <Button
-                  key={index}
-                  variant="ghost"
-                  size="icon"
-                  className={`h-9 w-9 ${button.active ? 'text-red-500' : ''}`}
-                  onClick={button.onClick}
-                  style={button.active ? { color: button.activeColor } : {}}
-                >
-                  <button.Icon className="w-5 h-5" />
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-        
-        {/* Scroll progress indicator */}
-        <div className="w-full h-0.5 bg-gray-100">
-          <div 
-            className="h-full bg-primary transition-all duration-300" 
-            style={{ width: `${customScrollProgress}%` }}
-          />
-        </div>
-      </header>
-    );
-  }
-);
-
-// SellerHeroBanner Component with ref forwarding
-interface SellerHeroBannerProps {
-  seller: Seller;
-  onScrollProgress: (progress: number) => void;
-}
-
-const SellerHeroBanner = forwardRef<HTMLDivElement, SellerHeroBannerProps>(
-  ({ seller, onScrollProgress }, ref) => {
-    useEffect(() => {
-      const handleScroll = () => {
-        const scrollY = window.scrollY;
-        const banner = document.getElementById('seller-hero-banner');
-        if (!banner) return;
-        
-        const bannerHeight = banner.offsetHeight;
-        const progress = Math.min((scrollY / bannerHeight) * 100, 100);
-        onScrollProgress(progress);
-      };
-      
-      window.addEventListener('scroll', handleScroll, { passive: true });
-      return () => window.removeEventListener('scroll', handleScroll);
-    }, [onScrollProgress]);
-    
-    return (
-      <div ref={ref} id="seller-hero-banner" className="hero-banner relative h-64 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative container mx-auto px-4 h-full flex items-end pb-8">
-          <div className="flex items-end gap-4">
-            <div className="w-20 h-20 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center text-2xl font-bold">
-              {seller.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{seller.name}</h1>
-              <p className="text-white/80">{seller.description?.substring(0, 100)}...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-);
 
 // Profile Image Component
 const ProfileImage: React.FC<{ 
@@ -541,7 +432,7 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               <span className="text-muted-foreground">Followers</span>
               <span className="font-medium">{formatNumber(seller.followers_count || 0)}</span>
             </div>
-            </div>
+          </div>
         </Card>
 
         <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
@@ -736,7 +627,7 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   const { data: reels = [], isLoading } = useSellerReels(sellerId);
 
   // Function to format numbers to K/M/B
-  const formatCount = (count) => {
+  const formatCount = (count: number) => {
     if (count >= 1000000000) {
       return (count / 1000000000).toFixed(1) + 'B';
     }
@@ -746,7 +637,7 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
     if (count >= 1000) {
       return (count / 1000).toFixed(1) + 'K';
     }
-    return count;
+    return count.toString();
   };
 
   if (isLoading) {
@@ -1100,7 +991,7 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
       id: '2', 
       name: 'Fashion',
       description: 'Clothing, shoes, and accessories',
-      image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop',
+      image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w-400&h=300&fit=crop',
       product_count: 15,
       created_at: '2024-01-10T00:00:00Z'
     },
