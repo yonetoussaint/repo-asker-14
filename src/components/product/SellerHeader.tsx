@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Heart, MessageCircle, Search, ChevronRight } from "lucide-react";
+import { Heart, MessageCircle, Search, ChevronRight, Share, CheckCircle } from "lucide-react";
 import { useScrollProgress } from "./header/useScrollProgress";
 import BackButton from "./header/BackButton";
 import HeaderActionButton from "./header/HeaderActionButton";
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useNavigationLoading } from '@/hooks/useNavigationLoading';
 import SearchPageSkeleton from '@/components/search/SearchPageSkeleton';
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 interface ActionButton {
   Icon: any;
@@ -14,6 +15,11 @@ interface ActionButton {
   active?: boolean;
   activeColor?: string;
   count?: number;
+}
+
+interface OnlineStatus {
+  isOnline: boolean;
+  lastSeen?: string;
 }
 
 interface SellerHeaderProps {
@@ -25,6 +31,9 @@ interface SellerHeaderProps {
   isFollowing?: boolean;
   onFollow?: () => void;
   onMessage?: () => void;
+  onShare?: () => void;
+  customScrollProgress?: number;
+  onlineStatus?: OnlineStatus;
 }
 
 const SellerHeader: React.FC<SellerHeaderProps> = ({ 
@@ -35,48 +44,86 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
   seller,
   isFollowing = false,
   onFollow,
-  onMessage
+  onMessage,
+  onShare,
+  customScrollProgress,
+  onlineStatus
 }) => {
   const { progress: internalProgress } = useScrollProgress();
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { isLoading, startLoading } = useNavigationLoading();
 
+  // Use custom progress if provided, otherwise use internal progress
+  const progress = customScrollProgress !== undefined ? customScrollProgress : internalProgress;
+  
   // Use forced state or actual scroll progress
-  const displayProgress = forceScrolledState ? 1 : internalProgress;
+  const displayProgress = forceScrolledState ? 1 : progress;
 
   if (isLoading) {
     return <SearchPageSkeleton />;
   }
 
+  const getStatusText = () => {
+    if (!onlineStatus) return null;
+    
+    if (onlineStatus.isOnline) return "Online now";
+    if (onlineStatus.lastSeen) {
+      const now = new Date();
+      const lastSeenDate = new Date(onlineStatus.lastSeen);
+      const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60));
+
+      if (diffInMinutes < 1) return "Just now";
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+      return `${Math.floor(diffInMinutes / 1440)}d ago`;
+    }
+    return "Offline";
+  };
+
   return (
-    <div className="sticky top-0 left-0 right-0 z-30 flex flex-col bg-white">
+    <div 
+      id="seller-header"
+      className="fixed top-0 left-0 right-0 z-30 flex flex-col transition-all duration-300"
+    >
       {/* Main Header */}
       <div 
-        className="py-2 px-3 w-full transition-all duration-700 border-b"
+        className="py-2 px-3 w-full transition-all duration-700"
         style={{
           backgroundColor: `rgba(255, 255, 255, ${displayProgress * 0.95})`,
           backdropFilter: `blur(${displayProgress * 8}px)`,
         }}
       >
         <div className="flex items-center justify-between w-full max-w-6xl mx-auto">
-          {/* Left side - Back button */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Left side - Back button and seller info when scrolled */}
+          <div className="flex items-center gap-3 flex-shrink-0">
             <BackButton progress={displayProgress} />
 
             {/* Seller info when scrolled */}
-            {displayProgress >= 0.7 && seller && (
-              <div className="flex items-center gap-2 ml-2">
-                <Separator orientation="vertical" className="h-4" />
-                <div className="flex items-center gap-2">
-                  <img
-                    src={seller.logo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"}
-                    alt={seller.name}
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
-                  <span className="text-sm font-medium truncate max-w-[120px]">
-                    {seller.name}
-                  </span>
+            {displayProgress >= 0.5 && seller && (
+              <div className="flex items-center gap-2">
+                <img
+                  src={seller.profile_image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"}
+                  alt={seller.name}
+                  className="w-8 h-8 rounded-full object-cover border"
+                />
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-semibold text-gray-900 truncate max-w-32">
+                      {seller.name}
+                    </span>
+                    {seller.verified && (
+                      <CheckCircle className="w-3 h-3 text-blue-500 fill-current" />
+                    )}
+                  </div>
+                  {onlineStatus && (
+                    <div className="flex items-center gap-1">
+                      <div className={`w-2 h-2 rounded-full ${onlineStatus.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                      <span className={`text-xs ${onlineStatus.isOnline ? 'text-green-600' : 'text-muted-foreground'}`}>
+                        {getStatusText()}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -88,7 +135,7 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
               <div className="flex-1 relative max-w-md mx-auto">
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search seller products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onClick={() => {
@@ -128,58 +175,15 @@ const SellerHeader: React.FC<SellerHeaderProps> = ({
                   activeColor="#f43f5e"
                 />
                 <HeaderActionButton 
-                  Icon={MessageCircle} 
+                  Icon={Share} 
                   progress={displayProgress}
-                  onClick={onMessage}
+                  onClick={onShare}
                 />
               </>
             )}
           </div>
         </div>
       </div>
-
-      {/* Seller info when not fully scrolled */}
-      {displayProgress < 0.7 && seller && (
-        <div 
-          className="px-3 py-2 w-full border-b bg-white transition-opacity duration-300"
-          style={{ opacity: 1 - (displayProgress / 0.7) }}
-        >
-          <div className="flex items-center justify-between w-full max-w-6xl mx-auto">
-            <div className="flex items-center gap-3">
-              <img
-                src={seller.logo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face"}
-                alt={seller.name}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div>
-                <h2 className="font-semibold text-sm">{seller.name}</h2>
-                <p className="text-xs text-muted-foreground">
-                  {seller.followers_count ? `${seller.followers_count} followers` : 'New seller'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={onFollow}
-                className={`px-3 py-1 text-xs rounded-full border ${
-                  isFollowing 
-                    ? 'bg-gray-100 border-gray-300 text-foreground' 
-                    : 'bg-primary border-primary text-white'
-                }`}
-              >
-                {isFollowing ? 'Following' : 'Follow'}
-              </button>
-              <button
-                onClick={onMessage}
-                className="px-3 py-1 text-xs rounded-full border border-gray-300 bg-white"
-              >
-                Message
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
