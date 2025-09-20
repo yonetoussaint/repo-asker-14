@@ -288,7 +288,7 @@ const ProductsTab: React.FC<{
             <SelectItem value="price-low">Price: Low to High</SelectItem>
             <SelectItem value="price-high">Price: High to Low</SelectItem>
           </SelectContent>
-        </Select>
+          </Select>
       </div>
 
       {filteredProducts.length === 0 ? (
@@ -991,7 +991,7 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
       id: '2', 
       name: 'Fashion',
       description: 'Clothing, shoes, and accessories',
-      image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w-400&h=300&fit=crop',
+      image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop',
       product_count: 15,
       created_at: '2024-01-10T00:00:00Z'
     },
@@ -1115,19 +1115,18 @@ const SellerPage: React.FC = () => {
   // Improved scroll handling effect for sticky tabs  
   useEffect(() => {
     const handleScroll = () => {  
-      if (!headerRef.current || !tabsRef.current || !heroBannerRef.current) return;  
+      if (!headerRef.current || !tabsRef.current) return;  
 
       const scrollY = window.scrollY;  
       const headerHeight = headerRef.current.offsetHeight;  
-      const heroBannerHeight = heroBannerRef.current.offsetHeight;
 
       // Calculate the original position of tabs based on current tab
-      let originalTabsOffsetTop = heroBannerHeight;
+      let originalTabsOffsetTop = 0;
 
       if (activeTab === 'products' && sellerInfoRef.current) {
-        // For products tab, tabs come after header + hero banner + seller info
+        // For products tab, tabs come after header + seller info
         const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-        originalTabsOffsetTop += sellerInfoHeight;
+        originalTabsOffsetTop = sellerInfoHeight;
       }
 
       // Store tabs height for spacer
@@ -1138,7 +1137,7 @@ const SellerPage: React.FC = () => {
 
       // Determine if tabs should be sticky
       // They become sticky when they would scroll past the header
-      const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
+      const shouldBeSticky = scrollY >= headerHeight;
 
       // Only update state if it changed to prevent unnecessary re-renders
       if (shouldBeSticky !== isTabsSticky) {
@@ -1233,19 +1232,12 @@ const SellerPage: React.FC = () => {
 
     // Force recalculation after DOM updates
     setTimeout(() => {
-      if (headerRef.current && tabsRef.current && heroBannerRef.current) {
+      if (headerRef.current && tabsRef.current) {
         const scrollY = window.scrollY;
         const headerHeight = headerRef.current.offsetHeight;
-        const heroBannerHeight = heroBannerRef.current.offsetHeight;
         
-        let originalTabsOffsetTop = heroBannerHeight;
-
-        if (newTab === 'products' && sellerInfoRef.current) {
-          const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-          originalTabsOffsetTop += sellerInfoHeight;
-        }
-
-        const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
+        // Determine if tabs should be sticky
+        const shouldBeSticky = scrollY >= headerHeight;
         setIsTabsSticky(shouldBeSticky);
       }
     }, 300);
