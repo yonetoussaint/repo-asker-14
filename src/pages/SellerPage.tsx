@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, forwardRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomerReviewsEnhanced from '@/components/product/CustomerReviewsEnhanced';
 import ProductQA from '@/components/product/ProductQA';
@@ -6,6 +6,7 @@ import { useSeller, useSellerProducts, useSellerReels } from '@/hooks/useSeller'
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SellerHeader from '@/components/product/SellerHeader';
+import SellerHeroBanner from '@/components/seller/SellerHeroBanner';
 import TabsNavigation from '@/components/home/TabsNavigation';
 import { Heart, MessageCircle, Star, Search, Package, Calendar, Users, Play, Phone, Mail, MapPin, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,48 +53,6 @@ interface OnlineStatus {
   isOnline: boolean;
   lastSeen?: string;
 }
-
-// SellerHeroBanner Component with ref forwarding
-interface SellerHeroBannerProps {
-  seller: Seller;
-  onScrollProgress: (progress: number) => void;
-}
-
-const SellerHeroBanner = forwardRef<HTMLDivElement, SellerHeroBannerProps>(
-  ({ seller, onScrollProgress }, ref) => {
-    useEffect(() => {
-      const handleScroll = () => {
-        const scrollY = window.scrollY;
-        const banner = document.getElementById('seller-hero-banner');
-        if (!banner) return;
-        
-        const bannerHeight = banner.offsetHeight;
-        const progress = Math.min((scrollY / bannerHeight) * 100, 100);
-        onScrollProgress(progress);
-      };
-      
-      window.addEventListener('scroll', handleScroll, { passive: true });
-      return () => window.removeEventListener('scroll', handleScroll);
-    }, [onScrollProgress]);
-    
-    return (
-      <div ref={ref} id="seller-hero-banner" className="hero-banner relative h-64 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative container mx-auto px-4 h-full flex items-end pb-8">
-          <div className="flex items-end gap-4">
-            <div className="w-20 h-20 rounded-full bg-white/20 border-4 border-white/30 flex items-center justify-center text-2xl font-bold">
-              {seller.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{seller.name}</h1>
-              <p className="text-white/80">{seller.description?.substring(0, 100)}...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-);
 
 // Profile Image Component
 const ProfileImage: React.FC<{ 
@@ -473,7 +432,7 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               <span className="text-muted-foreground">Followers</span>
               <span className="font-medium">{formatNumber(seller.followers_count || 0)}</span>
             </div>
-            </div>
+          </div>
         </Card>
 
         <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
@@ -524,7 +483,7 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
             <div className="text-xl mb-1">🛡️</div>
             <div className="text-xs text-muted-foreground">Secure Payments</div>
           </div>
-          <div className="text-center p-3 bg极端的-30 rounded-lg">
+          <div className="text-center p-3 bg-muted/30 rounded-lg">
             <div className="text-xl mb-1">🎯</div>
             <div className="text-xs text-muted-foreground">Customer Focus</div>
           </div>
@@ -583,7 +542,7 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                 <span className="text-sm">{item.icon}</span>
               </div>
-              <div className="flex极端的 pb-4 border-l border-muted-foreground/20 pl-4 ml-4 relative">
+              <div className="flex-1 pb-4 border-l border-muted-foreground/20 pl-4 ml-4 relative">
                 {index < timeline.length - 1 && (
                   <div className="absolute left-0 top-8 w-px h-full bg-muted-foreground/20" />
                 )}
@@ -604,15 +563,15 @@ const AboutTab: React.FC<{ seller: Seller }> = ({ seller }) => {
 const ReviewsTab: React.FC<{ seller: Seller }> = ({ seller }) => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="grid grid极端的-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 text-center sm:col-span-1">
-          <div className="text-2xl font-bold mb极端的">{seller.rating?.toFixed(1) || '4.8'}</div>
-          <极端的 className="flex justify-center mb-2">
+          <div className="text-2xl font-bold mb-1">{seller.rating?.toFixed(1) || '4.8'}</div>
+          <div className="flex justify-center mb-2">
             {[1,2,3,4,5].map((star) => (
               <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
             ))}
-          </极端的>
-          <p className="text-xs text-muted-foreground">{formatNumber(seller.total_sales)} reviews</极端的>
+          </div>
+          <p className="text-xs text-muted-foreground">{formatNumber(seller.total_sales)} reviews</p>
         </Card>
 
         <div className="sm:col-span-2 space-y-2">
@@ -644,7 +603,7 @@ const ReviewsTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-medium text-sm">Customer {review}</span>
-                  <span className="text-xs text极端的-foreground">2d ago</span>
+                  <span className="text-xs text-muted-foreground">2d ago</span>
                 </div>
                 <div className="flex mb-2">
                   {[1,2,3,4,5].map((star) => (
@@ -664,7 +623,7 @@ const ReviewsTab: React.FC<{ seller: Seller }> = ({ seller }) => {
 };
 
 // Reels Tab Component
-const ReelsTab: React.FC<{ sellerId: string }> = ({ seller极端的 }) => {
+const ReelsTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   const { data: reels = [], isLoading } = useSellerReels(sellerId);
 
   // Function to format numbers to K/M/B
@@ -673,10 +632,10 @@ const ReelsTab: React.FC<{ sellerId: string }> = ({ seller极端的 }) => {
       return (count / 1000000000).toFixed(1) + 'B';
     }
     if (count >= 1000000) {
-      return (极端的 / 1000000).toFixed(1) + 'M';
+      return (count / 1000000).toFixed(1) + 'M';
     }
     if (count >= 1000) {
-      return (count / 1000).toFixed极端的) + 'K';
+      return (count / 1000).toFixed(1) + 'K';
     }
     return count;
   };
@@ -745,7 +704,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
       description: 'Get instant responses via our chat system',
       action: () => setShowContactForm(true),
       color: 'blue',
-      available极端的 true
+      available: true
     },
     { 
       icon: Phone, 
@@ -823,7 +782,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                 <method.icon className={`w-6 h-6 text-${method.color}-600`} />
               </div>
               <div>
-                <h3 className="font-semibold极端的-sm">{method.title}</h3>
+                <h3 className="font-semibold text-sm">{method.title}</h3>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                   {method.description}
                 </p>
@@ -833,7 +792,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                   Available
                 </Badge>
               )}
-            </极端的>
+            </div>
           </Card>
         ))}
       </div>
@@ -872,7 +831,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 placeholder="Type your message here..."
-                className="w-full p-3 border border-input rounded-md resize-none min-h-[120极端的] text-sm"
+                className="w-full p-3 border border-input rounded-md resize-none min-h-[120px] text-sm"
                 maxLength={500}
               />
               <div className="text-xs text-muted-foreground mt-1">
@@ -913,7 +872,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               </div>
             )}
             {seller.phone && (
-              <div className="flex items-center gap极端的 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                 <Phone className="w-4 h-4 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Phone</p>
@@ -928,7 +887,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
               <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Business Address</极端的>
+                  <p className="text-sm font-medium">Business Address</p>
                   <p className="text-sm text-muted-foreground">{seller.address}</p>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(seller.address || '')}`)}>
@@ -941,7 +900,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
 
         <Card className="p-6">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Calendar className="极端的-4 h-4" />
+            <Calendar className="w-4 h-4" />
             Business Hours & Response Times
           </h3>
 
@@ -953,8 +912,8 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
             <div className="flex justify-between items-center py-2">
               <span className="text-sm">Saturday</span>
               <Badge variant="outline" className="text-xs">10:00 AM - 4:00 PM</Badge>
-            </极端的>
-            <div className="极端的 justify-between items-center py-2">
+            </div>
+            <div className="flex justify-between items-center py-2">
               <span className="text-sm">Sunday</span>
               <Badge variant="secondary" className="text-xs">Closed</Badge>
             </div>
@@ -982,7 +941,7 @@ const ContactTab: React.FC<{ seller: Seller }> = ({ seller }) => {
 
       {/* FAQ Section */}
       <Card className="p-6">
-        <h3 className="font-semibold mb-4 text-lg极端的 items-center gap-2">
+        <h3 className="font-semibold mb-4 text-lg flex items-center gap-2">
           <span>❓</span>
           Frequently Asked Questions
         </h3>
@@ -1024,7 +983,7 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
       id: '1',
       name: 'Electronics',
       description: 'Phones, laptops, and gadgets',
-      image_url: 'https://images.unsplash.com/photo-1498049794561-7780极端的7231661?w=400&h=300&fit=crop',
+      image_url: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=300&fit=crop',
       product_count: 24,
       created_at: '2024-01-15T00:00:00Z'
     },
@@ -1040,15 +999,15 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
       id: '3',
       name: 'Home & Garden',
       description: 'Furniture, decor, and outdoor items',
-      image_url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+      image_url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h-300&fit=crop',
       product_count: 18,
-      created_at: '2024-01-05T00:00极端的Z'
+      created_at: '2024-01-05T00:00:00Z'
     },
     {
       id: '4',
-      name极端的 'Sports & Fitness',
+      name: 'Sports & Fitness',
       description: 'Equipment, apparel, and accessories',
-      image_url: 'https://images.unsplash.com/极端的-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
+      image_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h-300&fit=crop',
       product_count: 12,
       created_at: '2024-01-01T00:00:00Z'
     }
@@ -1096,7 +1055,7 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
         ))}
       </div>
 
-      <Card className="p-极端的 bg-muted/20">
+      <Card className="p-6 bg-muted/20">
         <div className="text-center">
           <Package className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
           <h3 className="font-medium mb-2">Custom Categories</h3>
@@ -1145,7 +1104,7 @@ const SellerPage: React.FC = () => {
   const { data: products = [], isLoading: productsLoading, error: productsError } = useSellerProducts(sellerId);  
 
   // Error handling  
-  if (seller极端的) {  
+  if (sellerError) {  
     return <ErrorMessage message="Failed to load seller information" />;  
   }  
 
@@ -1156,22 +1115,19 @@ const SellerPage: React.FC = () => {
   // Improved scroll handling effect for sticky tabs  
   useEffect(() => {
     const handleScroll = () => {  
-      if (!headerRef.current || !tabsRef.current) return;  
+      if (!headerRef.current || !tabsRef.current || !heroBannerRef.current) return;  
 
       const scrollY = window.scrollY;  
       const headerHeight = headerRef.current.offsetHeight;  
+      const heroBannerHeight = heroBannerRef.current.offsetHeight;
 
       // Calculate the original position of tabs based on current tab
-      let originalTabsOffsetTop = 0;
+      let originalTabsOffsetTop = heroBannerHeight;
 
-      if (activeTab === 'products') {
+      if (activeTab === 'products' && sellerInfoRef.current) {
         // For products tab, tabs come after header + hero banner + seller info
-        const heroBannerHeight = heroBannerRef.current?.offsetHeight || 0;
-        const sellerInfoHeight = sellerInfoRef.current?.offsetHeight || 0;
-        originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
-      } else {
-        // For other tabs, tabs come right after header
-        originalTabsOffsetTop = 0;
+        const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
+        originalTabsOffsetTop += sellerInfoHeight;
       }
 
       // Store tabs height for spacer
@@ -1214,7 +1170,7 @@ const SellerPage: React.FC = () => {
   useEffect(() => {  
     // This is where you'd set up your WebSocket connection or polling  
     // For demo purposes, we'll simulate status changes  
-    const interval = setInterval(()极端的  
+    const interval = setInterval(() => {  
       // Randomly toggle online status for demo  
       setOnlineStatus(prev => ({  
         isOnline: Math.random() > 0.3, // 70% chance of being online  
@@ -1277,16 +1233,16 @@ const SellerPage: React.FC = () => {
 
     // Force recalculation after DOM updates
     setTimeout(() => {
-      if (headerRef.current && tabsRef.current) {
+      if (headerRef.current && tabsRef.current && heroBannerRef.current) {
         const scrollY = window.scrollY;
         const headerHeight = headerRef.current.offsetHeight;
+        const heroBannerHeight = heroBannerRef.current.offsetHeight;
         
-        let originalTabsOffsetTop = 0;
+        let originalTabsOffsetTop = heroBannerHeight;
 
-        if (newTab === 'products') {
-          const heroBannerHeight = heroBannerRef.current?.offsetHeight || 0;
-          const sellerInfoHeight = sellerInfoRef.current?.offsetHeight || 0;
-          originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
+        if (newTab === 'products' && sellerInfoRef.current) {
+          const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
+          originalTabsOffsetTop += sellerInfoHeight;
         }
 
         const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
@@ -1317,9 +1273,13 @@ const SellerPage: React.FC = () => {
         ref={headerRef}
         activeTab={activeTab}  
         onTabChange={handleTabChange}  
+        seller={seller}
         isFollowing={isFollowing}  
         onFollow={handleFollow}  
-        onMessage={handleMessage}  
+        onMessage={handleMessage}
+        onShare={handleShare}
+        customScrollProgress={scrollProgress}
+        onlineStatus={onlineStatus}
         actionButtons={[  
           {  
             Icon: Heart,  
@@ -1332,27 +1292,24 @@ const SellerPage: React.FC = () => {
             onClick: handleShare  
           }  
         ]}  
-        forceScrolledState={true}  
       />  
 
-      <main style={{ paddingTop: headerHeight }}>  
-        {/* Only show Hero Banner on the products tab */}
-        {activeTab === 'products' && (  
-          <SellerHeroBanner 
-            ref={heroBannerRef}
-            seller={seller} 
-            onScrollProgress={handleScrollProgress}
-          />
-        )}
-
-        {activeTab === 'products' && (  
-          <div ref={sellerInfoRef}>
-            <SellerInfoSection   
-              seller={seller}   
-              products={products}   
-              onlineStatus={onlineStatus}  
-            />  
-          </div>
+      <main style={{ paddingTop: '64px' }}>  
+        {activeTab === 'products' && (
+          <>
+            <SellerHeroBanner 
+              ref={heroBannerRef}
+              seller={seller} 
+              onScrollProgress={handleScrollProgress}
+            />
+            <div ref={sellerInfoRef}>
+              <SellerInfoSection   
+                seller={seller}   
+                products={products}   
+                onlineStatus={onlineStatus}  
+              />  
+            </div>
+          </>
         )}  
 
         <nav   
@@ -1362,7 +1319,7 @@ const SellerPage: React.FC = () => {
               ? 'fixed top-0 left-0 right-0 z-40 shadow-md'   
               : 'relative'  
           }`}  
-          style={isTabs极端的 ? { 
+          style={isTabsSticky ? { 
             top: `${headerHeight}px`,
             transform: isTabsSticky ? 'translateZ(0)' : 'none' // GPU acceleration for smoother animation
           } : undefined}  
