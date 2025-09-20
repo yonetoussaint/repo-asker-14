@@ -1071,6 +1071,8 @@ const CategoriesTab: React.FC<{ sellerId: string }> = ({ sellerId }) => {
   );
 };
 
+
+
 // Main SellerPage Component  
 const SellerPage: React.FC = () => {  
   const { sellerId } = useParams<{ sellerId: string }>();  
@@ -1115,19 +1117,22 @@ const SellerPage: React.FC = () => {
   // Improved scroll handling effect for sticky tabs  
   useEffect(() => {
     const handleScroll = () => {  
-      if (!headerRef.current || !tabsRef.current || !heroBannerRef.current) return;  
+      if (!headerRef.current || !tabsRef.current) return;  
 
       const scrollY = window.scrollY;  
       const headerHeight = headerRef.current.offsetHeight;  
-      const heroBannerHeight = heroBannerRef.current.offsetHeight;
 
       // Calculate the original position of tabs based on current tab
-      let originalTabsOffsetTop = heroBannerHeight;
+      let originalTabsOffsetTop = 0;
 
-      if (activeTab === 'products' && sellerInfoRef.current) {
+      if (activeTab === 'products') {
         // For products tab, tabs come after header + hero banner + seller info
-        const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-        originalTabsOffsetTop += sellerInfoHeight;
+        const heroBannerHeight = heroBannerRef.current?.offsetHeight || 0;
+        const sellerInfoHeight = sellerInfoRef.current?.offsetHeight || 0;
+        originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
+      } else {
+        // For other tabs, tabs come right after header
+        originalTabsOffsetTop = 0;
       }
 
       // Store tabs height for spacer
@@ -1233,16 +1238,16 @@ const SellerPage: React.FC = () => {
 
     // Force recalculation after DOM updates
     setTimeout(() => {
-      if (headerRef.current && tabsRef.current && heroBannerRef.current) {
+      if (headerRef.current && tabsRef.current) {
         const scrollY = window.scrollY;
         const headerHeight = headerRef.current.offsetHeight;
-        const heroBannerHeight = heroBannerRef.current.offsetHeight;
         
-        let originalTabsOffsetTop = heroBannerHeight;
+        let originalTabsOffsetTop = 0;
 
-        if (newTab === 'products' && sellerInfoRef.current) {
-          const sellerInfoHeight = sellerInfoRef.current.offsetHeight;
-          originalTabsOffsetTop += sellerInfoHeight;
+        if (newTab === 'products') {
+          const heroBannerHeight = heroBannerRef.current?.offsetHeight || 0;
+          const sellerInfoHeight = sellerInfoRef.current?.offsetHeight || 0;
+          originalTabsOffsetTop = heroBannerHeight + sellerInfoHeight;
         }
 
         const shouldBeSticky = scrollY >= (originalTabsOffsetTop - headerHeight);
@@ -1297,11 +1302,12 @@ const SellerPage: React.FC = () => {
       <main style={{ paddingTop: '64px' }}>  
         {activeTab === 'products' && (
           <>
-            <SellerHeroBanner 
-              ref={heroBannerRef}
-              seller={seller} 
-              onScrollProgress={handleScrollProgress}
-            />
+            <div ref={heroBannerRef}>
+              <SellerHeroBanner 
+                seller={seller} 
+                onScrollProgress={handleScrollProgress}
+              />
+            </div>
             <div ref={sellerInfoRef}>
               <SellerInfoSection   
                 seller={seller}   
