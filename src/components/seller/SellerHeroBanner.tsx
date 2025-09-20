@@ -198,7 +198,7 @@ export default function SellerHeroBanner({ seller, onScrollProgress }: SellerHer
     <>
       <div
         ref={heroBannerRef}
-        className="relative overflow-hidden w-full"
+        className="hero-banner relative overflow-hidden w-full"
         style={{ marginTop: offset }}
       >
         <BannerSlides 
