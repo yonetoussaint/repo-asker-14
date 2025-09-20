@@ -1273,41 +1273,35 @@ useEffect(() => {
   ];
 
          return (  
-  <div className="min-h-screen bg-white">  
-    <SellerHeader  
-      ref={headerRef}
-      activeTab={activeTab}  
-      onTabChange={handleTabChange}  
-      seller={seller}
-      isFollowing={isFollowing}  
-      onFollow={handleFollow}  
-      onMessage={handleMessage}
-      onShare={handleShare}
-      customScrollProgress={scrollProgress}
-      onlineStatus={onlineStatus}
-      actionButtons={[  
-        {  
-          Icon: Heart,  
-          active: isFollowing,  
-          onClick: handleFollow,  
-          activeColor: "#f43f5e"  
-        },  
-        {  
-          Icon: Share,  
-          onClick: handleShare  
-        }  
-      ]}  
-    />  
+    <div className="min-h-screen bg-white">  
+      <header   
+        ref={headerRef}  
+        className="fixed top-0 left-0 right-0 z-50 bg-white"  
+      >  
+        <SellerHeader  
+          activeTab={activeTab}  
+          onTabChange={handleTabChange}  
+          isFollowing={isFollowing}  
+          onFollow={handleFollow}  
+          onMessage={handleMessage}  
+          actionButtons={[  
+            {  
+              Icon: Heart,  
+              active: isFollowing,  
+              onClick: handleFollow,  
+              activeColor: "#f43f5e"  
+            },  
+            {  
+              Icon: MessageCircle,  
+              onClick: handleMessage  
+            }  
+          ]}  
+          forceScrolledState={true}  
+        />  
+      </header>  
 
-    <main style={{ paddingTop: `${headerHeight || 64}px` }}>  
-      {activeTab === 'products' && (
-        <>
-          <div ref={heroBannerRef}>
-            <SellerHeroBanner 
-              seller={seller} 
-              onScrollProgress={handleScrollProgress}
-            />
-          </div>
+      <main style={{ paddingTop: headerHeight }}>  
+        {activeTab === 'products' && (  
           <div ref={sellerInfoRef}>
             <SellerInfoSection   
               seller={seller}   
@@ -1315,76 +1309,76 @@ useEffect(() => {
               onlineStatus={onlineStatus}  
             />  
           </div>
-        </>
-      )}  
+        )}  
 
-      <nav   
-        ref={tabsRef}  
-        className={`bg-white border-b transition-all duration-200 ease-out ${  
-          isTabsSticky   
-            ? 'fixed left-0 right-0 z-40 shadow-md'   
-            : 'relative'  
-        }`}  
-        style={isTabsSticky ? { 
-          top: `${headerHeight}px`
-        } : undefined}  
-      >  
-        <TabsNavigation  
-          tabs={tabs}  
-          activeTab={activeTab}  
-          onTabChange={handleTabChange}  
-        />  
-      </nav>  
-
-      {/* Spacer div when tabs are sticky to prevent content jumping */}  
-      {isTabsSticky && (
-        <div 
-          className="transition-all duration-200 ease-out"
-          style={{ height: `${tabsHeight}px` }} 
-        />
-      )}
-
-      <div   
-        ref={mainContentRef}  
-        className="container mx-auto px-4 py-6 tab-content-container"  
-      >  
-        {/* Tab content components remain the same */}
-        {activeTab === 'products' && (  
-          <ProductsTab  
-            products={products}  
-            isLoading={productsLoading}  
-            searchQuery={searchQuery}  
-            setSearchQuery={setSearchQuery}  
-            navigate={navigate}  
+        <nav   
+          ref={tabsRef}  
+          className={`bg-white border-b transition-all duration-200 ease-out ${  
+            isTabsSticky   
+              ? 'fixed top-0 left-0 right-0 z-40'   
+              : 'relative'  
+          }`}  
+          style={isTabsSticky ? { 
+            top: `${headerHeight}px`,
+            transform: isTabsSticky ? 'translateZ(0)' : 'none' // GPU acceleration for smoother animation
+          } : undefined}  
+        >  
+          <TabsNavigation  
+            tabs={tabs}  
+            activeTab={activeTab}  
+            onTabChange={handleTabChange}  
           />  
-        )}  
+        </nav>  
 
-        {activeTab === 'categories' && (  
-          <CategoriesTab sellerId={sellerId} />  
-        )}  
-
-        {activeTab === 'reels' && (  
-          <ReelsTab sellerId={sellerId} />  
-        )}  
-
-        {activeTab === 'about' && (  
-          <AboutTab seller={seller} />  
-        )}  
-
-        {activeTab === 'reviews' && (  
-          <CustomerReviewsEnhanced productId={sellerId} limit={10} />  
-        )}  
-
-        {activeTab === 'qas' && (  
-          <ProductQA productId={sellerId} limit={10} />  
-        )}  
-
-        {activeTab === 'contact' && (  
-          <ContactTab seller={seller} />  
+        {/* Spacer div when tabs are sticky to prevent content jumping */}  
+        {isTabsSticky && (
+          <div 
+            className="transition-all duration-200 ease-out"
+            style={{ height: `${tabsHeight}px` }} 
+          />
         )}
-      </div>  
-    </main>  
-  </div>  
-);
+
+        <div   
+          ref={mainContentRef}  
+          className="container mx-auto px-4 py-6 tab-content-container"  
+        >  
+          {activeTab === 'products' && (  
+            <ProductsTab  
+              products={products}  
+              isLoading={productsLoading}  
+              searchQuery={searchQuery}  
+              setSearchQuery={setSearchQuery}  
+              navigate={navigate}  
+            />  
+          )}  
+
+          {activeTab === 'categories' && (  
+            <CategoriesTab sellerId={sellerId} />  
+          )}  
+
+          {activeTab === 'reels' && (  
+            <ReelsTab sellerId={sellerId} />  
+          )}  
+
+          {activeTab === 'about' && (  
+            <AboutTab seller={seller} />  
+          )}  
+
+          {activeTab === 'reviews' && (  
+            <CustomerReviewsEnhanced productId={sellerId} limit={10} />  
+          )}  
+
+          {activeTab === 'qas' && (  
+            <ProductQA productId={sellerId} limit={10} />  
+          )}  
+
+          {activeTab === 'contact' && (  
+            <ContactTab seller={seller} />  
+          )}
+        </div>  
+      </main>  
+    </div>  
+  );  
+};
 
 export default SellerPage
